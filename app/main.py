@@ -1,10 +1,11 @@
 import os
+import pathlib
 import secrets
 from datetime import datetime, timedelta, timezone
 from enum import Enum
 from typing import List, Optional
 
-from fastapi import FastAPI, Depends, HTTPException, status, UploadFile, Form, File
+from fastapi import FastAPI, Depends, HTTPException, Path, status, UploadFile, Form, File, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -13,6 +14,20 @@ from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from passlib.context import CryptContext
+from fastapi.templating import Jinja2Templates
+
+app = FastAPI()
+
+# Dapatkan path absolut direktori 'app' menggunakan pathlib.Path
+BASE_DIR = pathlib.Path(__file__).resolve().parent
+
+# Mount folder static & templates
+app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
+templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+
+@app.get("/")
+async def render_index(request: Request):
+    return templates.TemplateResponse("index.html", {"request": request})
 
 # ---------------------------------------------------------
 # DATABASE SETUP

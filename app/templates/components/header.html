@@ -1,0 +1,131 @@
+<!-- FULLSCREEN LOGIN SCREEN -->
+<div id="landingLoginScreen" class="fixed inset-0 bg-gradient-to-br from-jci-navy via-jci-blue to-slate-900 z-50 flex items-center justify-center p-4 overflow-y-auto">
+    <div class="max-w-md w-full bg-white rounded-3xl shadow-2xl overflow-hidden border border-white/20">
+        <div class="bg-jci-navy p-6 text-center text-white relative">
+            <div class="w-16 h-16 bg-white rounded-2xl mx-auto flex items-center justify-center shadow-lg mb-3">
+                <i class="fa-solid fa-star text-jci-gold text-3xl"></i>
+            </div>
+            <h2 class="text-xl font-extrabold tracking-wide uppercase">JCI INDONESIA</h2>
+            <p class="text-xs text-jci-cyan font-medium mt-0.5">Star Excellence Program Portal</p>
+        </div>
+
+        <div class="p-6 space-y-4">
+            <div id="loginAlert" class="hidden p-3 rounded-xl text-xs flex items-center space-x-2 transition-all">
+                <i id="loginAlertIcon" class="fa-solid fa-circle-exclamation text-sm"></i>
+                <span id="loginAlertText" class="font-medium"></span>
+            </div>
+
+            <!-- LOGIN FORM -->
+            <form id="landingLoginForm" onsubmit="handleAuthLogin(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Registered Email *</label>
+                    <input type="email" id="lEmail" required placeholder="pic.jakarta@jci.or.id" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue text-xs">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Password *</label>
+                    <input type="password" id="lPassword" required placeholder="••••••••" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue text-xs">
+                </div>
+                
+                <div class="flex items-center justify-between text-xs pt-1">
+                    <button type="button" onclick="switchLandingForm('forgot')" class="text-jci-blue font-semibold hover:underline">Forgot password?</button>
+                    <button type="button" onclick="switchLandingForm('register')" class="text-slate-600 font-semibold hover:underline">Register PIC &rarr;</button>
+                </div>
+
+                <button type="submit" id="btnLoginSubmit" class="w-full py-3 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-xl shadow-md transition text-xs flex items-center justify-center space-x-2">
+                    <span>Sign In to Portal</span>
+                </button>
+            </form>
+
+            <!-- REGISTER FORM -->
+            <form id="landingRegisterForm" onsubmit="handleAuthRegister(event)" class="space-y-3 text-xs hidden">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Full Name *</label>
+                    <input type="text" id="lRegFullName" required class="w-full p-2.5 bg-slate-50 border rounded-lg focus:outline-none focus:border-jci-blue">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Official Email Address *</label>
+                    <input type="email" id="lRegEmail" required class="w-full p-2.5 bg-slate-50 border rounded-lg focus:outline-none focus:border-jci-blue">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Password *</label>
+                    <input type="password" id="lRegPassword" required class="w-full p-2.5 bg-slate-50 border rounded-lg focus:outline-none focus:border-jci-blue">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Assigned Chapter *</label>
+                    <select id="lRegChapterSelect" required class="w-full p-2.5 bg-slate-50 border rounded-lg focus:outline-none focus:border-jci-blue font-semibold text-slate-800"></select>
+                </div>
+                <div class="flex items-center justify-between pt-1">
+                    <button type="button" onclick="switchLandingForm('login')" class="text-slate-600 font-semibold hover:underline">&larr; Back to Login</button>
+                    <button type="submit" class="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-md transition">Submit Registration</button>
+                </div>
+            </form>
+
+            <!-- FORGOT PASSWORD FORM -->
+            <form id="landingForgotForm" onsubmit="handleAuthForgotPassword(event)" class="space-y-3 text-xs hidden">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Email Address *</label>
+                    <input type="email" id="lForgotEmail" required placeholder="pic.jakarta@jci.or.id" class="w-full p-2.5 bg-slate-50 border rounded-lg focus:outline-none focus:border-jci-blue">
+                </div>
+                <div class="flex items-center justify-between pt-1">
+                    <button type="button" onclick="switchLandingForm('login')" class="text-slate-600 font-semibold hover:underline">&larr; Cancel</button>
+                    <button type="submit" class="py-2.5 px-4 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg shadow-md transition">Send Verification Code</button>
+                </div>
+            </form>
+
+            <!-- RESET PASSWORD FORM -->
+            <form id="landingResetForm" onsubmit="handleAuthResetPassword(event)" class="space-y-3 text-xs hidden">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Email Address</label>
+                    <input type="email" id="lResetEmail" required readonly class="w-full p-2.5 bg-slate-100 border rounded-lg text-slate-500">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Verification OTP Code *</label>
+                    <input type="text" id="lResetCode" maxlength="6" required placeholder="123456" class="w-full p-2.5 bg-slate-50 border rounded-lg focus:outline-none focus:border-jci-blue text-center font-mono font-bold tracking-widest text-sm">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">New Password *</label>
+                    <input type="password" id="lResetNewPassword" required placeholder="••••••••" class="w-full p-2.5 bg-slate-50 border rounded-lg focus:outline-none focus:border-jci-blue">
+                </div>
+                <div class="flex items-center justify-between pt-1">
+                    <button type="button" onclick="switchLandingForm('login')" class="text-slate-600 font-semibold hover:underline">&larr; Cancel</button>
+                    <button type="submit" class="py-2.5 px-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-md transition">Update Password</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- HEADER TOP NAVBAR -->
+<header class="bg-jci-navy text-white sticky top-0 z-40 shadow-lg border-b border-jci-blue/30">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-16">
+            <div class="flex items-center space-x-3 cursor-pointer" onclick="switchTab('dashboard')">
+                <div class="bg-white p-1.5 rounded-lg shadow-md flex items-center justify-center w-10 h-10">
+                    <i class="fa-solid fa-star text-jci-gold text-2xl"></i>
+                </div>
+                <div>
+                    <div class="font-extrabold text-lg leading-tight tracking-wide text-white flex items-center gap-2">
+                        JCI INDONESIA
+                        <span class="bg-jci-cyan text-[10px] font-semibold px-2 py-0.5 rounded text-white uppercase tracking-wider">V1 PORTAL</span>
+                    </div>
+                    <div class="text-xs text-slate-300 font-medium">Star Excellence Program</div>
+                </div>
+            </div>
+
+            <div class="flex items-center space-x-3">
+                <div id="headerChapterSelectWrapper" class="flex items-center bg-jci-blue/60 backdrop-blur rounded-lg p-1 border border-white/10">
+                    <i class="fa-solid fa-location-dot text-jci-cyan ml-2.5 mr-1.5 text-xs"></i>
+                    <select id="chapterSelect" onchange="changeChapter(this.value)" class="bg-transparent text-xs text-white font-medium focus:outline-none pr-2 py-1 cursor-pointer"></select>
+                </div>
+
+                <div class="flex items-center space-x-2 bg-slate-900/60 px-3 py-1.5 rounded-xl border border-slate-700 text-xs">
+                    <i class="fa-solid fa-circle-user text-jci-cyan"></i>
+                    <span id="headerUserLabel" class="font-bold text-white">Guest</span>
+                    <button onclick="handleLogout()" class="ml-2 text-rose-400 hover:text-rose-300 font-semibold" title="Sign Out">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</header>

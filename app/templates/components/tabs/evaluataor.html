@@ -1,0 +1,61 @@
+<div id="tab-evaluator" class="tab-content space-y-6 hidden">
+    <div class="bg-amber-50/70 border border-amber-200/80 rounded-xl p-4 flex items-start space-x-3 text-amber-900 shadow-2xs">
+        <div class="p-2 bg-amber-100 rounded-lg text-amber-600 mt-0.5">
+            <i class="fa-solid fa-shield-halved text-base"></i>
+        </div>
+        <div>
+            <h4 class="font-bold text-sm">National Evaluator & Admin Desk</h4>
+            <p class="text-xs text-amber-800/90 mt-0.5">Inspect chapter submissions, assign approved points, approve pending PIC registrations, manage chapter roster, or manage standards criteria.</p>
+        </div>
+    </div>
+
+    <!-- PANEL PENGATURAN CHAPTER -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+            <i class="fa-solid fa-sitemap text-jci-blue"></i> National Chapter Roster Management
+        </h4>
+        <div class="flex flex-col sm:flex-row items-center gap-3">
+            <input type="text" id="newChapterNameInput" placeholder="Enter new Chapter Name..." class="w-full sm:w-80 p-2.5 bg-slate-50 border rounded-xl text-xs focus:outline-none focus:border-jci-blue">
+            <button onclick="handleAddChapter()" class="w-full sm:w-auto px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs transition flex items-center justify-center space-x-1">
+                <i class="fa-solid fa-plus"></i><span>Add Chapter</span>
+            </button>
+        </div>
+        <div class="border-t pt-3">
+            <span class="text-xs font-semibold text-slate-500 block mb-2">Registered Chapters List:</span>
+            <div id="evaluatorChapterList" class="flex flex-wrap gap-2 text-xs"></div>
+        </div>
+    </div>
+
+    <!-- PANEL PENGATURAN STANDAR / KATEGORI -->
+    <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+            <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-list-check text-jci-blue"></i> National Standards & Categories Management
+            </h4>
+            <button onclick="openStandardModalForAdd()" class="px-3 py-1.5 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg text-xs transition flex items-center space-x-1">
+                <i class="fa-solid fa-plus"></i><span>Add New Standard</span>
+            </button>
+        </div>
+        <div>
+            <span class="text-xs font-semibold text-slate-500 block mb-2">Registered Standards List (Click Edit or Delete):</span>
+            <div id="evaluatorStandardsList" class="max-h-72 overflow-y-auto space-y-2 pr-2"></div>
+        </div>
+    </div>
+
+    <div id="adminPendingUsersCard" class="bg-white p-4 rounded-xl border border-amber-200 shadow-sm space-y-3 hidden">
+        <h4 class="font-bold text-slate-800 text-xs flex items-center gap-2">
+            <i class="fa-solid fa-user-clock text-amber-500"></i> Pending PIC Registrations Approval
+        </h4>
+        <div id="pendingUsersList" class="space-y-2 text-xs"></div>
+    </div>
+
+    <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
+        <div class="flex items-center space-x-3">
+            <label class="font-bold text-slate-700">Filter Chapter To Audit:</label>
+            <select id="evalChapterSelect" onchange="changeChapter(this.value)" class="bg-slate-50 border rounded-lg px-2 py-1 font-semibold text-slate-800 cursor-pointer"></select>
+        </div>
+        <span class="text-slate-500 font-medium" id="evalAuditSubtitle">Showing submissions for JCI Jakarta</span>
+    </div>
+
+    <div id="evaluatorSubmissionsList" class="space-y-4"></div>
+</div>

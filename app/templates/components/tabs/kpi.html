@@ -1,0 +1,75 @@
+<div id="tab-kpi" class="tab-content space-y-6 hidden">
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between border-b pb-4 gap-4">
+            <div>
+                <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">Official Form 2026</span>
+                <h2 class="text-2xl font-extrabold text-slate-900">10 Aspect Chapter KPI Self-Assessment Form</h2>
+                <p class="text-xs text-slate-500 mt-0.5">Disusun berdasarkan 10 Aspek Penilaian KPI JCI Indonesia 2026 & AD/ART 2025.</p>
+            </div>
+            <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-right">
+                <span class="text-[10px] text-emerald-800 uppercase font-bold">Evaluator Score</span>
+                <div class="text-2xl font-black text-emerald-700" id="kpiScoreTotal">0 pts</div>
+                <span class="text-[10px] text-slate-500" id="kpiStatusBadge">Status: Draft</span>
+            </div>
+        </div>
+
+        <form id="kpiSelfAssessmentForm" onsubmit="handleKPISubmit(event)" class="space-y-4 text-xs">
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+                <div class="bg-slate-50 p-4 font-bold text-slate-800 flex justify-between items-center cursor-pointer" onclick="toggleKpiSection('kpiSec1')">
+                    <span>1. Membership Management & LBOD Compliance (Max 100 Pts)</span>
+                    <i class="fa-solid fa-chevron-down text-slate-400"></i>
+                </div>
+                <div id="kpiSec1" class="p-4 space-y-3 bg-white border-t">
+                    <div>
+                        <label class="block font-semibold mb-1">Status Update LBOD 2026 & Member Foto di jci.cc:</label>
+                        <select id="kpi_lbod_status" class="w-full p-2 bg-slate-50 border rounded-lg">
+                            <option value="100">Sebelum 31 Des 23:59 WIB (100 pts)</option>
+                            <option value="80">1 Jan - 31 Jan (80 pts)</option>
+                            <option value="0">Setelah 31 Jan / Tidak Update (0 pts)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block font-semibold mb-1">Jumlah Member Declared (Sebutkan):</label>
+                        <input type="number" id="kpi_declared_count" placeholder="Jumlah member..." class="w-full p-2 bg-slate-50 border rounded-lg">
+                    </div>
+                </div>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+                <div class="bg-slate-50 p-4 font-bold text-slate-800 flex justify-between items-center cursor-pointer" onclick="toggleKpiSection('kpiSec2')">
+                    <span>2. Legalitas & Document Compliance (Max 145 Pts)</span>
+                    <i class="fa-solid fa-chevron-down text-slate-400"></i>
+                </div>
+                <div id="kpiSec2" class="p-4 space-y-2 bg-white border-t">
+                    <label class="flex items-center space-x-2"><input type="checkbox" id="kpi_leg_adart"> <span>Memiliki & Mengirim AD/ART Chapter</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" id="kpi_leg_notaris"> <span>Memiliki Akta Notaris Perubahan Pengurus</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" id="kpi_leg_sk"> <span>Memiliki SK Kemenkumham</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" id="kpi_leg_npwp"> <span>Memiliki NPWP Chapter</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" id="kpi_leg_bank"> <span>Memiliki Rekening Bank atas nama Chapter</span></label>
+                </div>
+            </div>
+
+            <div class="border border-slate-200 rounded-xl overflow-hidden">
+                <div class="bg-slate-50 p-4 font-bold text-slate-800 flex justify-between items-center cursor-pointer" onclick="toggleKpiSection('kpiSec3')">
+                    <span>3. Plan of Action (PoA) & Administration (Max 100 Pts)</span>
+                    <i class="fa-solid fa-chevron-down text-slate-400"></i>
+                </div>
+                <div id="kpiSec3" class="p-4 space-y-2 bg-white border-t">
+                    <label class="flex items-center space-x-2"><input type="checkbox" id="kpi_poa_upload"> <span>Upload PoA Chapter 2026 Resmi</span></label>
+                    <label class="flex items-center space-x-2"><input type="checkbox" id="kpi_poa_midyear"> <span>Upload Mid-Year Performance Report</span></label>
+                </div>
+            </div>
+
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 text-slate-600 text-xs">
+                <p class="font-bold text-slate-800"><i class="fa-solid fa-circle-info text-jci-blue"></i> Catatan Formulir KPI:</p>
+                <p class="mt-1">Aspek 4-10 diverifikasi secara otomatis dari dokumen pendukung yang Anda unggah.</p>
+            </div>
+
+            <div class="flex justify-end pt-2">
+                <button type="submit" class="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl shadow-md transition">
+                    <i class="fa-solid fa-paper-plane mr-1"></i> Submit Form KPI Self-Assessment
+                </button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+
+{% block content %}
+    <!-- Active Role Banner -->
+    <div id="roleAlertBanner" class="mb-6 p-4 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 flex items-start justify-between shadow-sm">
+        <div class="flex items-start space-x-3">
+            <div class="p-2 bg-blue-100 text-jci-blue rounded-lg mt-0.5">
+                <i id="roleBannerIcon" class="fa-solid fa-user-pen text-lg"></i>
+            </div>
+            <div>
+                <h4 id="roleBannerTitle" class="font-bold text-sm">Active Mode: Chapter PIC</h4>
+                <p id="roleBannerDesc" class="text-xs text-blue-700 mt-0.5">
+                    You are managing standard entries for <strong id="activeChapterName">JCI Jakarta</strong>.
+                </p>
+            </div>
+        </div>
+        <span class="text-xs px-2.5 py-1 bg-white font-semibold text-blue-800 rounded-md border border-blue-200" id="roleTag">PIC Mode</span>
+    </div>
+
+    <!-- Tab Contents -->
+    {% include 'components/tabs/dashboard.html' %}
+    {% include 'components/tabs/standards.html' %}
+    {% include 'components/tabs/kpi.html' %}
+    {% include 'components/tabs/evaluator.html' %}
+    {% include 'components/tabs/leaderboard.html' %}
+    {% include 'components/tabs/archive.html' %}
+    {% include 'components/tabs/reference.html' %}
+{% endblock %}
