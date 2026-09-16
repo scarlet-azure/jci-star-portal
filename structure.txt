@@ -1,0 +1,49 @@
+star v2/
+
+├── app/
+
+│ ├── __init__.py
+
+│ ├── database.py
+
+│ ├── models.py
+
+│ ├── crud.py
+
+│ └── routers/ <-- Pecah API ke modul terpisah
+
+│ ├── __init__.py
+
+│ ├── auth.py # Login, Register, Reset Pass, Admin Approvals
+
+│ ├── standards.py # Standards & Submissions
+
+│ ├── kpi.py # Formulir Self-Assessment KPI & Penilaian Evaluator
+
+│ ├── leaderboard.py # Leaderboard 5-Star & Leaderboard KPI
+
+│ └── archive.py # Tahunan / Annual Cycle
+
+├── static/ <-- Frontend Assets
+
+│ ├── css/
+
+│ └── js/
+
+│ ├── auth.js
+
+│ ├── kpi.js
+
+│ └── dashboard.js
+
+├── templates/
+
+│ ├── login.html <-- Dipecah per Halaman/Route
+
+│ ├── dashboard.html
+
+│ └── kpi.html
+
+├── seed.py
+
+└── main.py <-- Hanya include router (app.include_router)

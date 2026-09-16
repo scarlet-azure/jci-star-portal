@@ -1,0 +1,136 @@
+<div id="tab-dashboard" class="tab-content space-y-6">
+    <div id="adminNationalOverview" class="hidden grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-semibold text-slate-400 uppercase">Total Active Chapters</span>
+                <h3 class="text-2xl font-black text-slate-900 mt-1" id="statTotalChapters">0</h3>
+                <p class="text-[10px] text-emerald-600 font-bold mt-0.5"><i class="fa-solid fa-check-circle"></i> Registered in System</p>
+            </div>
+            <div class="w-12 h-12 bg-blue-50 text-jci-blue rounded-xl flex items-center justify-center text-xl">
+                <i class="fa-solid fa-building"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-semibold text-slate-400 uppercase">National Avg Score</span>
+                <h3 class="text-2xl font-black text-jci-blue mt-1" id="statAvgScore">0 pts</h3>
+                <p class="text-[10px] text-slate-500 font-medium mt-0.5">Across 5 Star Dimensions</p>
+            </div>
+            <div class="w-12 h-12 bg-cyan-50 text-jci-cyan rounded-xl flex items-center justify-center text-xl">
+                <i class="fa-solid fa-chart-line"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-semibold text-slate-400 uppercase">Top Performer Chapter</span>
+                <h3 class="text-base font-extrabold text-slate-900 mt-1 truncate max-w-[130px]" id="statTopChapter">-</h3>
+                <p class="text-[10px] text-amber-600 font-bold mt-0.5" id="statTopScore">0 pts</p>
+            </div>
+            <div class="w-12 h-12 bg-amber-50 text-jci-gold rounded-xl flex items-center justify-center text-xl">
+                <i class="fa-solid fa-crown"></i>
+            </div>
+        </div>
+
+        <div class="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex items-center justify-between">
+            <div>
+                <span class="text-xs font-semibold text-slate-400 uppercase">Total Submissions Review</span>
+                <h3 class="text-2xl font-black text-slate-900 mt-1" id="statTotalSubmissions">0</h3>
+                <p class="text-[10px] text-blue-600 font-semibold mt-0.5">Verified & Pending</p>
+            </div>
+            <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center text-xl">
+                <i class="fa-solid fa-file-signature"></i>
+            </div>
+        </div>
+    </div>
+
+    <div class="bg-gradient-to-r from-jci-navy via-jci-blue to-slate-800 rounded-2xl p-6 text-white shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+            <div class="flex items-center space-x-2 text-jci-cyan font-semibold text-xs uppercase mb-1">
+                <i class="fa-solid fa-building"></i><p>JCI&nbsp<span id="dashChapterTitle"></span>&nbspEXCELLENCE STATUS</p>
+            </div>
+            <h2 class="text-2xl sm:text-3xl font-extrabold" id="dashOverallBand">Under Minimum Standard (&lt;90 pts)</h2>
+            <p class="text-xs text-slate-300 mt-1 max-w-xl">
+                Local Organization performance tracked across the 5 strategic JCI dimensions: Efficiency, Network, Experience, Outreach, and Impact.
+            </p>
+        </div>
+
+        <div class="flex gap-2 bg-white/10 p-3 rounded-xl backdrop-blur border border-white/10">
+            <div id="starBox-eff" class="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-white/10 min-w-[65px]">
+                <i class="fa-solid fa-star text-slate-500 text-base mb-1" id="starIcon-eff"></i>
+                <span class="text-[9px] font-bold uppercase text-slate-300">EFFICIENCY</span>
+                <span class="text-xs font-semibold text-slate-300" id="score-eff">0 pts</span>
+            </div>
+            <div id="starBox-net" class="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-white/10 min-w-[65px]">
+                <i class="fa-solid fa-star text-slate-500 text-base mb-1" id="starIcon-net"></i>
+                <span class="text-[9px] font-bold uppercase text-slate-300">NETWORK</span>
+                <span class="text-xs font-semibold text-slate-300" id="score-net">0 pts</span>
+            </div>
+            <div id="starBox-exp" class="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-white/10 min-w-[65px]">
+                <i class="fa-solid fa-star text-slate-500 text-base mb-1" id="starIcon-exp"></i>
+                <span class="text-[9px] font-bold uppercase text-slate-300">EXPERIENCE</span>
+                <span class="text-xs font-semibold text-slate-300" id="score-exp">0 pts</span>
+            </div>
+            <div id="starBox-out" class="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-white/10 min-w-[65px]">
+                <i class="fa-solid fa-star text-slate-500 text-base mb-1" id="starIcon-out"></i>
+                <span class="text-[9px] font-bold uppercase text-slate-300">OUTREACH</span>
+                <span class="text-xs font-semibold text-slate-300" id="score-out">0 pts</span>
+            </div>
+            <div id="starBox-imp" class="flex flex-col items-center justify-center p-2 rounded-lg bg-slate-900/50 border border-white/10 min-w-[65px]">
+                <i class="fa-solid fa-star text-slate-500 text-base mb-1" id="starIcon-imp"></i>
+                <span class="text-[9px] font-bold uppercase text-slate-300">IMPACT</span>
+                <span class="text-xs font-semibold text-slate-300" id="score-imp">0 pts</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div class="lg:col-span-1 space-y-6">
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2 mb-4">
+                    <i class="fa-solid fa-chart-radar text-jci-blue"></i> 5-Star Performance Profile
+                </h3>
+                <div class="w-full h-64 flex items-center justify-center">
+                    <canvas id="starRadarChart"></canvas>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between border-b pb-2">
+                    <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-calendar-days text-jci-blue"></i> Deadline Calendar
+                    </h3>
+                    <span class="text-[10px] font-bold bg-rose-100 text-rose-700 px-2 py-0.5 rounded-full" id="urgentCount">0 Pending</span>
+                </div>
+
+                <div class="bg-slate-50 rounded-xl p-3 border border-slate-200">
+                    <div class="flex items-center justify-between mb-2">
+                        <button onclick="changeCalMonth(-1)" class="text-slate-500 hover:text-jci-blue text-xs p-1"><i class="fa-solid fa-chevron-left"></i></button>
+                        <span id="calMonthYearTitle" class="font-extrabold text-xs text-slate-800">September 2026</span>
+                        <button onclick="changeCalMonth(1)" class="text-slate-500 hover:text-jci-blue text-xs p-1"><i class="fa-solid fa-chevron-right"></i></button>
+                    </div>
+                    <div class="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mb-1">
+                        <div>S</div><div>M</div><div>T</div><div>W</div><div>T</div><div>F</div><div>S</div>
+                    </div>
+                    <div id="calGridDays" class="grid grid-cols-7 gap-1 text-center text-xs"></div>
+                </div>
+
+                <div class="pt-2">
+                    <h4 class="font-bold text-xs text-slate-700 mb-2 flex items-center gap-1.5">
+                        <i class="fa-solid fa-clock-rotate-left text-rose-500"></i> Upcoming Deadlines
+                    </h4>
+                    <div id="upcomingDeadlinesList" class="space-y-2 text-xs max-h-48 overflow-y-auto pr-1"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="lg:col-span-2 space-y-4">
+            <div class="flex items-center justify-between">
+                <h3 class="font-bold text-slate-800 text-sm">Star Qualification Progress</h3>
+                <span class="text-xs text-slate-500 font-normal">Live points sync automatically</span>
+            </div>
+            <div id="starCardsList" class="space-y-4"></div>
+        </div>
+    </div>
+</div>

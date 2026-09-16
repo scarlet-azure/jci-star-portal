@@ -1,34 +1,50 @@
-import os
-import pathlib
-import secrets
 from datetime import datetime, timedelta, timezone
 from enum import Enum
+from pathlib import Path
+import os
+import secrets
 from typing import List, Optional
 
-from fastapi import FastAPI, Depends, HTTPException, Path, status, UploadFile, Form, File, Request
+from fastapi import FastAPI, Depends, HTTPException, Path as FPath, status, UploadFile, Form, File, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
+from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
 from sqlalchemy import create_engine, Column, Integer, String, Boolean, DateTime, Enum as SQLEnum, JSON
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, Session
 from passlib.context import CryptContext
-from fastapi.templating import Jinja2Templates
 
-app = FastAPI()
+app = FastAPI(title="JCI Indonesia Star Excellence API")
 
-# Dapatkan path absolut direktori 'app' menggunakan pathlib.Path
-BASE_DIR = pathlib.Path(__file__).resolve().parent
+# ---------------------------------------------------------
+# PATH & STATIC / TEMPLATES SETUP
+# ---------------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parent
 
-# Mount folder static & templates
-app.mount("/static", StaticFiles(directory=os.path.join(BASE_DIR, "static")), name="static")
-templates = Jinja2Templates(directory=os.path.join(BASE_DIR, "templates"))
+# Inisialisasi Jinja2 templates pointing ke 'app/templates'
+templates = Jinja2Templates(directory=str(BASE_DIR / "templates"))
 
-@app.get("/")
-async def render_index(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+# Middleware CORS
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
+# Folder uploads untuk file submission
+if not os.path.exists("uploads"):
+    os.makedirs("uploads")
+app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+
+# Jika Anda memiliki folder 'static' (untuk CSS/JS/img), mount di sini:
+# (Pastikan membuat folder 'app/static' jika template Anda memanggil file dari /static)
+if os.path.exists(BASE_DIR / "static"):
+    app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+    
 # ---------------------------------------------------------
 # DATABASE SETUP
 # ---------------------------------------------------------
@@ -141,7 +157,6 @@ def send_reset_email(to_email: str, code: str):
     print(f"[EMAIL MOCK] Verification OTP Code for {to_email}: {code}")
 
 def calculate_chapter_scores(db: Session, chapter_name: str):
-    # Hilangkan imbuhan "JCI " jika user memanggil "JCI Jakarta" atau "Jakarta"
     clean_chap = chapter_name.replace("JCI ", "").strip()
 
     submissions = db.query(Submission).filter(
@@ -160,11 +175,9 @@ def calculate_chapter_scores(db: Session, chapter_name: str):
     for sub in submissions:
         std = db.query(Standard).filter(Standard.id == sub.standard_id).first()
         if std:
-            # Ambil nilai string murni dari Enum/String
             raw_star = std.star.value if hasattr(std.star, 'value') else str(std.star)
-            raw_star = raw_star.split('.')[-1].upper() # Ambil kata terakhir (misal EFFICIENCY)
+            raw_star = raw_star.split('.')[-1].upper()
 
-            # Mapping ke key breakdown
             star_map = {
                 "EFFICIENCY": "Efficiency",
                 "NETWORK": "Network",
@@ -206,23 +219,6 @@ def calculate_chapter_scores(db: Session, chapter_name: str):
         "qualified_stars": qualified_stars,
         "breakdown": breakdown
     }
-
-# ---------------------------------------------------------
-# FASTAPI APP & SCHEMAS
-# ---------------------------------------------------------
-app = FastAPI(title="JCI Indonesia Star Excellence API")
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-if not os.path.exists("uploads"):
-    os.makedirs("uploads")
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
 
 # Pydantic Schemas
 class RegisterRequest(BaseModel):
@@ -277,7 +273,6 @@ class AuditPayload(BaseModel):
 def init_root_admin():
     db = SessionLocal()
     try:
-        # 1. Inisialisasi Default Admin
         admin_email = "danielsetiawan22@gmail.com"
         root = db.query(User).filter(User.email == admin_email).first()
         if not root:
@@ -293,18 +288,18 @@ def init_root_admin():
             db.add(admin_user)
             db.commit()
             print(f"Root Admin initialized: {admin_email}")
-
     except Exception as e:
-        print("Error initializing root admin / chapters:", e)
+        print("Error initializing root admin:", e)
     finally:
         db.close()
 
 # ---------------------------------------------------------
-# ROUTES
+# ROUTES (DI-FIX AGAR TIDAK NOT FOUND)
 # ---------------------------------------------------------
-@app.get("/")
-def read_root():
-    return FileResponse("index.html")
+@app.get("/", response_class=HTMLResponse)
+def read_index(request: Request):
+  # Pass request as the first argument, followed by the template name and context dict
+  return templates.TemplateResponse(request, "index.html", {})
 
 @app.get("/chapters")
 def get_chapters(db: Session = Depends(get_db)):
@@ -393,9 +388,6 @@ def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
     db.commit()
     return {"message": "Password berhasil diperbarui! Silakan login kembali."}
 
-# ---------------------------------------------------------
-# ADMIN & STANDARDS MANAGEMENT
-# ---------------------------------------------------------
 @app.get("/admin/pending-users")
 def get_pending_users(db: Session = Depends(get_db)):
     return db.query(User).filter(User.role == UserRole.CHAPTER_PIC, User.is_approved == False).all()
@@ -462,9 +454,6 @@ def delete_standard(std_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"Standard {std_id} berhasil dihapus"}
 
-# ---------------------------------------------------------
-# SUBMISSIONS MANAGEMENT
-# ---------------------------------------------------------
 @app.get("/submissions/{chapter_name}")
 def get_chapter_submissions(chapter_name: str, db: Session = Depends(get_db)):
     return db.query(Submission).filter(
@@ -534,9 +523,6 @@ def verify_submission(
     db.commit()
     return {"message": "Status verifikasi berhasil diperbarui!"}
 
-# ---------------------------------------------------------
-# LEADERBOARD & ARCHIVES
-# ---------------------------------------------------------
 @app.get("/leaderboard")
 def get_leaderboard(db: Session = Depends(get_db)):
     chapters = db.query(Chapter).all()
