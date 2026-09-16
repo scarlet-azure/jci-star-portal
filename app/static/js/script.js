@@ -729,19 +729,33 @@ function renderRadarChart(totals) {
     if (!ctx) return;
     if (radarChartInstance) radarChartInstance.destroy();
 
+    // 1. Tentukan target maksimal poin untuk masing-masing kategori sesuai database/aturan program
+    const categories = ['Efficiency', 'Network', 'Experience', 'Outreach', 'Impact'];
+    const maxTargets = {
+        Efficiency: 140, 
+        Network: 250,
+        Experience: 250,
+        Outreach: 250,
+        Impact: 250
+    };
+
+    // 2. Ambil nilai asli dari database (melalui objek totals)
+    const rawScores = categories.map(cat => totals[cat] || 0);
+
+    // 3. Hitung persentase pencapaian (0 - 100%) secara otomatis per kategori
+    const percentages = categories.map((cat, index) => {
+        const score = rawScores[index];
+        const max = maxTargets[cat];
+        return Math.min(100, Math.round((score / max) * 100));
+    });
+
     radarChartInstance = new Chart(ctx, {
         type: 'radar',
         data: {
-            labels: ['Efficiency', 'Network', 'Experience', 'Outreach', 'Impact'],
+            labels: categories,
             datasets: [{
-                label: 'Current Score',
-                data: [
-                    totals.Efficiency || 0, 
-                    totals.Network || 0, 
-                    totals.Experience || 0, 
-                    totals.Outreach || 0, 
-                    totals.Impact || 0
-                ],
+                label: 'Achievement (%)',
+                data: percentages,
                 backgroundColor: 'rgba(0, 163, 224, 0.2)',
                 borderColor: '#00A3E0',
                 pointBackgroundColor: '#FFB800',
@@ -755,15 +769,30 @@ function renderRadarChart(totals) {
             scales: {
                 r: {
                     min: 0,
-                    max: 250,
+                    max: 100, // Skala seragam 0% sampai 100% untuk semua sudut
                     beginAtZero: true,
                     angleLines: { color: '#e2e8f0' },
                     grid: { color: '#f1f5f9' },
                     pointLabels: { font: { size: 10, weight: 'bold' }, color: '#475569' },
-                    ticks: { display: false }
+                    ticks: { 
+                        display:false,
+                    }
                 }
             },
-            plugins: { legend: { display: false } }
+            plugins: { 
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            // Menampilkan info skor asli dari database vs target maksimal saat kursor diarahkan
+                            const cat = categories[context.dataIndex];
+                            const currentScore = rawScores[context.dataIndex];
+                            const maxScore = maxTargets[cat];
+                            return ` Score: ${currentScore} / ${maxScore} pts (${context.raw}%)`;
+                        }
+                    }
+                }
+            }
         }
     });
 }
