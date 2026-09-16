@@ -1,6 +1,6 @@
 import os
 from sqlalchemy.orm import Session
-from app.main import (
+from main import (
     engine, 
     SessionLocal, 
     Base, 
