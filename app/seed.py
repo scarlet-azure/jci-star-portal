@@ -1,42 +1,51 @@
 import os
+import sys
+from pathlib import Path
+
+# Pastikan Root Project & folder app terdaftar di sys.path
+CURRENT_DIR = Path(__file__).resolve().parent
+ROOT_DIR = CURRENT_DIR.parent
+
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+if str(CURRENT_DIR) not in sys.path:
+    sys.path.insert(0, str(CURRENT_DIR))
+
 from sqlalchemy.orm import Session
-from main import (
-    engine, 
-    SessionLocal, 
-    Base, 
+from app.core.database import engine, SessionLocal, Base, DB_PATH
+from app.core.security import hash_password
+from app.models.models import (
     User, 
     UserRole, 
     Chapter, 
     Standard, 
     Submission, 
     SubmissionStatus, 
-    StarCategory,
-    pwd_context
+    StarCategory
 )
 
-def hash_password(password: str) -> str:
-    pwd_bytes = password.encode('utf-8')[:72]
-    return pwd_context.hash(pwd_bytes.decode('utf-8', errors='ignore'))
-
 def seed_database():
-    print("Resetting database...")
+    print(f"Targeting root database at: {DB_PATH}")
     engine.dispose()
-    
-    db_file = engine.url.database
-    if db_file and os.path.exists(db_file):
+
+    # Hapus file database lama di root directory jika ada
+    if os.path.exists(DB_PATH):
         try:
-            os.remove(db_file)
-            print(f"File database '{db_file}' berhasil dihapus.")
+            os.remove(DB_PATH)
+            print(f"File database '{DB_PATH}' berhasil dihapus.")
         except Exception as e:
             print(f"Gagal menghapus file db: {e}")
 
+    # Buat ulang seluruh tabel database berdasarkan model terbaru
     Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
     try:
         print("Seeding database based on JCI Indonesia Star Excellence Handbook V1...")
 
+        # ==========================================
         # 1. SEED 18 OFFICIAL CHAPTERS
+        # ==========================================
         chapters_list = [
             "Badung Bali", "Bali", "Bandung", "Batavia", "Bogor City", "Borobudur", 
             "Central Java", "Dewata", "East Java", "Femme", "Jakarta", "Jayakarta", 
@@ -46,7 +55,9 @@ def seed_database():
             db.add(Chapter(name=cname))
         db.commit()
 
+        # ==========================================
         # 2. SEED ROOT ADMIN & PICS
+        # ==========================================
         admin_email = "danielsetiawan22@gmail.com"
         db.add(User(
             full_name="Daniel Setiawan (National Root Evaluator)",
@@ -77,11 +88,13 @@ def seed_database():
             ))
         db.commit()
 
+        # ==========================================
         # 3. SEED ALL 60 STANDARDS DIRECTLY FROM HANDBOOK V1
+        # ==========================================
         standards_seed = [
-            # ==========================================
+            # ------------------------------------------
             # EFFICIENCY STAR (14 Standards - Target 100 Pts)
-            # ==========================================
+            # ------------------------------------------
             ("EFF-01", "Chapter Leadership and Officer Information Update", StarCategory.EFFICIENCY, 
              "Ensure chapter leadership structure is properly recorded and visible for governance and accountability.", 
              "System record, submission timestamp, updated officer roster.", 5, "2026-03-31"),
@@ -138,9 +151,9 @@ def seed_database():
              "Achieve defined growth threshold against prior baseline.", 
              "Membership records, declaration comparison, growth calculation summary.", 10, "2026-11-30"),
 
-            # ==========================================
+            # ------------------------------------------
             # NETWORK STAR (14 Standards - Target 250 Pts)
-            # ==========================================
+            # ------------------------------------------
             ("NET-01", "National Leadership Platform Participation", StarCategory.NETWORK, 
              "Send eligible representatives to the recognized national leadership platform.", 
              "Registration, attendance, representative list.", 20, "2026-04-30"),
@@ -197,9 +210,9 @@ def seed_database():
              "Participate in World Fellowship Academy (WFA) reflecting chapter representation.", 
              "Registration, attendance, chapter representation record.", 30, "2026-08-31"),
 
-            # ==========================================
+            # ------------------------------------------
             # EXPERIENCE STAR (11 Standards - Target 250 Pts)
-            # ==========================================
+            # ------------------------------------------
             ("EXP-01", "Foundational Member Experience", StarCategory.EXPERIENCE, 
              "Provide structured entry experiences for new members through learning and early involvement.", 
              "Training attendance, onboarding record, participation history.", 35, "2026-05-31"),
@@ -244,9 +257,9 @@ def seed_database():
              "Support members taking part in recognized leadership exposure opportunities beyond local level.", 
              "Role record, appointment record, participation confirmation.", 45, "2026-11-30"),
 
-            # ==========================================
+            # ------------------------------------------
             # OUTREACH STAR (10 Standards - Target 250 Pts)
-            # ==========================================
+            # ------------------------------------------
             ("OUT-01", "Impact Storytelling and Publication", StarCategory.OUTREACH, 
              "Contribute stories, publications, or approved narrative content about chapter work.", 
              "Published article, newsletter inclusion, approved media piece.", 25, "2026-05-31"),
@@ -287,9 +300,9 @@ def seed_database():
              "Participate in recognized external awards or public recognition pathways beyond internal JCI spaces.", 
              "Application record, award record, judging confirmation, recognition evidence.", 30, "2026-11-15"),
 
-            # ==========================================
+            # ------------------------------------------
             # IMPACT STAR (11 Standards - Target 250 Pts)
-            # ==========================================
+            # ------------------------------------------
             ("IMP-01", "Strategic Impact Recognition and Submission", StarCategory.IMPACT, 
              "Document and submit qualifying initiatives into recognized impact or strategic contribution platforms.", 
              "Submission record, accepted entry, project report.", 25, "2026-05-31"),
@@ -348,9 +361,11 @@ def seed_database():
             ))
         db.commit()
 
-        # 4. RICH SAMPLE SUBMISSIONS (LENGKAP UNTUK 5 KATEGORI STAR)
+        # ==========================================
+        # 4. SAMPLE SUBMISSIONS FOR TESTING
+        # ==========================================
         sample_submissions = [
-            # --- JCI JAKARTA (Poin lengkap di 5 Star untuk grafik Radar yang mekar) ---
+            # --- JCI JAKARTA ---
             ("EFF-01", "Jakarta", "LBOD 2026 Updated", "Officer roster updated in national portal", 5, SubmissionStatus.APPROVED),
             ("EFF-02", "Jakarta", "Governance Docs 2026", "AD/ART & SK Kemenkumham submitted", 15, SubmissionStatus.APPROVED),
             ("EFF-04", "Jakarta", "National Dues Payment 2026", "Financial dues fully paid for 2026", 10, SubmissionStatus.APPROVED),
@@ -380,7 +395,7 @@ def seed_database():
             ("IMP-06", "Jakarta", "Corporate CSR Value Co-Creation", "Co-created digital literacy with Tech Corp", 35, SubmissionStatus.APPROVED),
             ("IMP-11", "Jakarta", "WFA Impact Report & Cross-Border Project", "Joint community action with JCI Japan", 25, SubmissionStatus.APPROVED),
 
-            # --- JCI SOLO (Top Contender) ---
+            # --- JCI SOLO ---
             ("EFF-01", "Solo", "LBOD 2026 Officer List", "Official structure updated", 5, SubmissionStatus.APPROVED),
             ("EFF-02", "Solo", "Legal Compliance 2026", "All governance documents submitted", 15, SubmissionStatus.APPROVED),
             ("EFF-07", "Solo", "Board Meeting Minutes Batch 1", "Complete documentation of meetings", 15, SubmissionStatus.APPROVED),
@@ -391,7 +406,7 @@ def seed_database():
             ("OUT-01", "Solo", "Impact Storytelling in Local Paper", "Feature story in Solopos", 25, SubmissionStatus.APPROVED),
             ("IMP-02", "Solo", "Herbal MSME Empowerment", "Assisted 40 local batik MSMEs", 45, SubmissionStatus.APPROVED),
 
-            # --- JCI BALI (Strong Network & Outreach) ---
+            # --- JCI BALI ---
             ("EFF-01", "Bali", "Leadership Roster 2026", "Uploaded to system", 5, SubmissionStatus.APPROVED),
             ("EFF-04", "Bali", "Financial Dues Settlement", "Paid 2026 dues", 10, SubmissionStatus.APPROVED),
             ("NET-05", "Bali", "ASPAC Delegation Bali Chapter", "Sent 10 delegates to ASPAC", 35, SubmissionStatus.APPROVED),
@@ -400,7 +415,7 @@ def seed_database():
             ("OUT-04", "Bali", "Eco-Tourism Digital Campaign", "Achieved 80k reach", 35, SubmissionStatus.APPROVED),
             ("IMP-01", "Bali", "Coral Reef Restoration Impact", "Planted 500 coral units", 25, SubmissionStatus.APPROVED),
 
-            # --- SUBMISSION STATUS PENDING & REVISION (Untuk Test Evaluator Portal) ---
+            # --- PENDING & REVISION STATUS ---
             ("EFF-05", "East Java", "Awards Entry Draft", "Submitted initial awards draft", 0, SubmissionStatus.PENDING),
             ("NET-13", "Bandung", "Public Debate Candidate", "Waiting for video evidence check", 0, SubmissionStatus.REVISION_REQUESTED),
         ]
@@ -418,13 +433,14 @@ def seed_database():
             ))
 
         db.commit()
-        print("Database seeding completed successfully with rich multi-category data!")
+        print(f"Database seeding completed successfully! DB generated at: {DB_PATH}")
 
     except Exception as e:
         print("Error during seeding:", e)
         db.rollback()
     finally:
         db.close()
+
 
 if __name__ == "__main__":
     seed_database()

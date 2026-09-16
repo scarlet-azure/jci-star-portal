@@ -1,12 +1,26 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from app.models import StarCategory, SubmissionStatus, UserRole
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, EmailStr, Field
 
+from app.models.models import StarCategory, SubmissionStatus, UserRole
 
+# --- CHAPTER SCHEMAS ---
+class ChapterBase(BaseModel):
+    name: str
+
+class ChapterCreate(ChapterBase):
+    pass
+
+class ChapterResponse(ChapterBase):
+    id: Optional[int] = None
+
+    class Config:
+        from_attributes = True  # Untuk kompatibilitas SQLAlchemy (ORM mode)
+        
 # ==========================================
 # 1. AUTH & USER SCHEMAS
 # ==========================================
+
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -17,17 +31,39 @@ class TokenData(BaseModel):
     role: Optional[UserRole] = None
 
 
+class RegisterRequest(BaseModel):
+    full_name: str
+    email: EmailStr
+    password: str
+    chapter_name: str
+
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    email: EmailStr
+    code: str
+    new_password: str
+
+
 class UserCreate(BaseModel):
-    email: str
+    email: EmailStr
     password: str
     full_name: str
-    role: UserRole
+    role: UserRole = UserRole.CHAPTER_USER
     chapter_name: Optional[str] = None
 
 
 class UserResponse(BaseModel):
     id: int
-    email: str
+    email: EmailStr
     full_name: str
     role: UserRole
     chapter_name: Optional[str] = None
@@ -36,8 +72,9 @@ class UserResponse(BaseModel):
 
 
 # ==========================================
-# 2. STANDARD SCHEMAS
+# 2. STANDARD SCHEMAS (5-STAR PROGRAM)
 # ==========================================
+
 class StandardBase(BaseModel):
     id: str
     star: StarCategory
@@ -45,13 +82,19 @@ class StandardBase(BaseModel):
     purpose: str
     requirement: str
     evidence_guide: str
-    max_score: int
-    active_status: str
+    max_score: int = 100
+    active_status: str = "Active"
+
+
+class StandardCreate(StandardBase):
+    pass
 
 
 class StandardUpdate(BaseModel):
     name: Optional[str] = None
     purpose: Optional[str] = None
+    requirement: Optional[str] = None
+    evidence_guide: Optional[str] = None
     max_score: Optional[int] = None
     active_status: Optional[str] = None
 
@@ -61,8 +104,9 @@ class StandardResponse(StandardBase):
 
 
 # ==========================================
-# 3. SUBMISSION SCHEMAS (5-STAR PROGRAM)
+# 3. SUBMISSION SCHEMAS
 # ==========================================
+
 class SubmissionCreate(BaseModel):
     standard_id: str
     title: str
@@ -95,12 +139,13 @@ class SubmissionResponse(BaseModel):
 # ==========================================
 # 4. LEADERBOARD SCHEMAS
 # ==========================================
+
 class StarBreakdown(BaseModel):
-    Efficiency: int
-    Network: int
-    Experience: int
-    Outreach: int
-    Impact: int
+    Efficiency: int = 0
+    Network: int = 0
+    Experience: int = 0
+    Outreach: int = 0
+    Impact: int = 0
 
 
 class LeaderboardEntry(BaseModel):
@@ -113,8 +158,9 @@ class LeaderboardEntry(BaseModel):
 
 
 # ==========================================
-# 5. KPI SELF-ASSESSMENT SCHEMAS (Pydantic Version)
+# 5. KPI SELF-ASSESSMENT SCHEMAS
 # ==========================================
+
 class KPISubmissionCreate(BaseModel):
     chapter_name: str
     year: int = 2026

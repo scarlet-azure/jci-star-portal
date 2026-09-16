@@ -18,7 +18,7 @@
             }
         }
     </script>
-    <script src="/static/js/script.js"></script>
+    <script type="module" src="{{ url_for('static', path='js/modules/main.js') }}"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col font-sans">
     {% include 'components/header.html' %}

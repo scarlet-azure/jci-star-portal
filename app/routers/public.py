@@ -1,11 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Request, Depends
+from fastapi.templating import Jinja2Templates
 
-router = APIRouter(tags=["Public & Analytics"])
+router = APIRouter()
+templates = Jinja2Templates(directory="app/templates")
 
-@router.get("/leaderboard")
-async def get_leaderboard():
-    return []
-
-@router.get("/archives/{chapter_name}")
-async def get_archives(chapter_name: str):
-    return []
+@router.get("/")
+def home_page(request: Request):
+    return templates.TemplateResponse(request=request, name="index.html", context={"title": "Dashboard"})

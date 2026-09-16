@@ -1,126 +1,172 @@
-from datetime import datetime, timezone
 import enum
-from app.database import Base
-from sqlalchemy import JSON, Boolean, Column, DateTime, Enum, ForeignKey, Integer, String, Text
+from datetime import datetime
+from sqlalchemy import (
+    Column,
+    Integer,
+    String,
+    Text,
+    DateTime,
+    Boolean,
+    Enum as SQLEnum,
+    ForeignKey,
+    JSON
+)
 from sqlalchemy.orm import relationship
+from app.core.database import Base
 
 
-class StarCategory(str, enum.Enum):
-    EFFICIENCY = "Efficiency"
-    NETWORK = "Network"
-    EXPERIENCE = "Experience"
-    OUTREACH = "Outreach"
-    IMPACT = "Impact"
-
-
-class SubmissionStatus(str, enum.Enum):
-    NOT_SUBMITTED = "Not Submitted"
-    PENDING = "Pending Verification"
-    APPROVED = "Approved"
-    REJECTED = "Rejected"
-
-
+# ==========================================
+# 1. ENUMS
+# ==========================================
 class UserRole(str, enum.Enum):
     ADMIN = "ADMIN"
     CHAPTER_PIC = "CHAPTER_PIC"
+    CHAPTER_USER = "CHAPTER_USER"
 
 
+class StarCategory(str, enum.Enum):
+    EFFICIENCY = "EFFICIENCY"
+    NETWORK = "NETWORK"
+    EXPERIENCE = "EXPERIENCE"
+    OUTREACH = "OUTREACH"
+    IMPACT = "IMPACT"
+
+
+class SubmissionStatus(str, enum.Enum):
+    PENDING = "Pending"
+    APPROVED = "Approved"
+    REVISION_REQUESTED = "Revision Requested"
+    REJECTED = "Rejected"
+    NEEDS_REVISION = "Needs Revision"
+
+
+# ==========================================
+# 2. USER MODEL
+# ==========================================
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
-    full_name = Column(String)
-    email = Column(String, unique=True, index=True)
-    username = Column(String, unique=True, index=True)
-    hashed_password = Column(String)
-    role = Column(Enum(UserRole), default=UserRole.CHAPTER_PIC)
-    chapter_name = Column(String, nullable=True)
-    is_approved = Column(Boolean, default=False)  # Approval oleh Admin
-    reset_code = Column(String, nullable=True)  # Kode Otp Forgot Password
+    full_name = Column(String, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    username = Column(String, unique=True, index=True, nullable=True)
+    hashed_password = Column(String, nullable=False)
+    role = Column(SQLEnum(UserRole), default=UserRole.CHAPTER_PIC, nullable=False)
+    chapter_name = Column(String, nullable=True, index=True)
+    is_approved = Column(Boolean, default=False)
+    reset_code = Column(String, nullable=True)
     reset_code_expires = Column(DateTime, nullable=True)
 
+    # Tambahkan foreign_keys di bawah ini
+    submissions = relationship(
+        "Submission", 
+        back_populates="user",
+        foreign_keys="Submission.submitted_by_id"
+    )
 
+
+# ==========================================
+# 3. CHAPTER MODEL
+# ==========================================
 class Chapter(Base):
     __tablename__ = "chapters"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True)
-    submissions = relationship("Submission", back_populates="chapter")
+    name = Column(String, unique=True, index=True, nullable=False)
 
 
+# ==========================================
+# 4. STANDARD MODEL (5-STAR PROGRAM)
+# ==========================================
 class Standard(Base):
     __tablename__ = "standards"
 
-    id = Column(String, primary_key=True, index=True)
-    star = Column(Enum(StarCategory))
-    name = Column(String)
-    purpose = Column(String)
-    requirement = Column(String)
-    evidence_guide = Column(String)
-    max_score = Column(Integer)
-    active_status = Column(String)
+    id = Column(String, primary_key=True, index=True)  # Format e.g., "EFF-01"
+    name = Column(String, nullable=False)
+    star = Column(SQLEnum(StarCategory), nullable=False, index=True)
+    purpose = Column(Text, nullable=True)
+    requirement = Column(Text, nullable=True)
+    evidence_guide = Column(Text, nullable=True)
+    max_score = Column(Integer, nullable=False, default=10)
     deadline = Column(String, nullable=True)
-    submissions = relationship("Submission", back_populates="standard", cascade="all, delete-orphan")
+    active_status = Column(String, nullable=False, default="Active")
+
+    submissions = relationship("Submission", back_populates="standard")
 
 
+# ==========================================
+# 5. SUBMISSION MODEL (5-STAR PROGRAM)
+# ==========================================
 class Submission(Base):
     __tablename__ = "submissions"
 
     id = Column(Integer, primary_key=True, index=True)
-    standard_id = Column(String, ForeignKey("standards.id"))
-    chapter_id = Column(Integer, ForeignKey("chapters.id"), nullable=True)
-    chapter_name = Column(String, nullable=True)
-    title = Column(String)
-    description = Column(Text)
+    standard_id = Column(String, ForeignKey("standards.id"), nullable=False, index=True)
+    chapter_name = Column(String, nullable=False, index=True)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=False)
     url = Column(String, nullable=True)
     file = Column(String, nullable=True)
-    status = Column(String, default=SubmissionStatus.PENDING)
-    score_earned = Column(Integer, default=0)
+    
+    status = Column(
+        SQLEnum(SubmissionStatus, values_callable=lambda obj: [e.value for e in obj]),
+        default=SubmissionStatus.PENDING,
+        nullable=False
+    )
+    score_earned = Column(Integer, default=0, nullable=False)
     evaluator_notes = Column(Text, nullable=True)
-    submitted_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    evaluated_at = Column(DateTime(timezone=True), nullable=True)
+    
+    submitted_by_id = Column(Integer, ForeignKey("users.id"), nullable=True)
+    submitted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    evaluated_at = Column(DateTime, nullable=True)
 
     standard = relationship("Standard", back_populates="submissions")
-    chapter = relationship("Chapter", back_populates="submissions")
+    # Tambahkan foreign_keys di bawah ini
+    user = relationship(
+        "User", 
+        back_populates="submissions",
+        foreign_keys=[submitted_by_id]
+    )
 
-
-# Model Arsip Tahunan (Annual Archive)
+# ==========================================
+# 6. ANNUAL ARCHIVE MODEL
+# ==========================================
 class AnnualArchive(Base):
     __tablename__ = "annual_archives"
 
     id = Column(Integer, primary_key=True, index=True)
-    year = Column(Integer, index=True)
-    chapter_name = Column(String, index=True)
-    total_score = Column(Integer)
-    qualified_stars = Column(Integer)
-    efficiency_band = Column(String)
-    breakdown_json = Column(JSON)  # Detail skor per bintang
-    archived_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    year = Column(Integer, index=True, nullable=False)
+    chapter_name = Column(String, index=True, nullable=False)
+    total_score = Column(Integer, nullable=False)
+    qualified_stars = Column(Integer, nullable=False)
+    efficiency_band = Column(String, nullable=False)
+    breakdown_json = Column(JSON, nullable=True)
 
 
-# Model KPI Submission
+# ==========================================
+# 7. KPI SELF-ASSESSMENT MODEL
+# ==========================================
 class KPISubmission(Base):
     __tablename__ = "kpi_submissions"
 
     id = Column(Integer, primary_key=True, index=True)
-    chapter_name = Column(String, index=True)
-    year = Column(Integer, default=2026)
+    chapter_name = Column(String, nullable=False, index=True)
+    year = Column(Integer, default=2026, nullable=False)
     
-    # Isian 10 Kategori Aspek Form KPI (JSON Structured Data)
-    membership_data = Column(JSON, nullable=True)  # Aspek 1
-    legality_data = Column(JSON, nullable=True)     # Aspek 2
-    poa_data = Column(JSON, nullable=True)         # Aspek 3
-    impact_data = Column(JSON, nullable=True)      # Aspek 4
-    skill_data = Column(JSON, nullable=True)       # Aspek 5
-    national_events_data = Column(JSON, nullable=True) # Aspek 6
-    intl_events_data = Column(JSON, nullable=True)     # Aspek 7
-    branding_data = Column(JSON, nullable=True)    # Aspek 8
-    awarding_data = Column(JSON, nullable=True)    # Aspek 9
-    misc_data = Column(JSON, nullable=True)        # Aspek 10
-    
-    # Poin Skor & Feedback dari National Evaluator
-    evaluator_score = Column(Integer, default=0)
+    membership_data = Column(JSON, nullable=True)
+    legality_data = Column(JSON, nullable=True)
+    poa_data = Column(JSON, nullable=True)
+    impact_data = Column(JSON, nullable=True)
+    skill_data = Column(JSON, nullable=True)
+    national_events_data = Column(JSON, nullable=True)
+    intl_events_data = Column(JSON, nullable=True)
+    branding_data = Column(JSON, nullable=True)
+    awarding_data = Column(JSON, nullable=True)
+    misc_data = Column(JSON, nullable=True)
+
+    evaluator_score = Column(Integer, default=0, nullable=False)
     evaluator_feedback = Column(Text, nullable=True)
-    status = Column(String, default="Draft")  # Draft, Pending Verification, Evaluated
-    submitted_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
-    evaluated_at = Column(DateTime(timezone=True), nullable=True)
+    status = Column(String, default="Pending Evaluation", nullable=False)
+    
+    submitted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    evaluated_at = Column(DateTime, nullable=True)
