@@ -1,10 +1,12 @@
 from datetime import datetime
 from typing import Any, Dict, List, Optional
-from pydantic import BaseModel, EmailStr, Field
+from pydantic import BaseModel, EmailStr, Field, AliasChoices
 
 from app.models.models import StarCategory, SubmissionStatus, UserRole
 
-# --- CHAPTER SCHEMAS ---
+# ==========================================
+# 0. CHAPTER SCHEMAS
+# ==========================================
 class ChapterBase(BaseModel):
     name: str
 
@@ -15,12 +17,11 @@ class ChapterResponse(ChapterBase):
     id: Optional[int] = None
 
     class Config:
-        from_attributes = True  # Untuk kompatibilitas SQLAlchemy (ORM mode)
-        
+        from_attributes = True
+
 # ==========================================
 # 1. AUTH & USER SCHEMAS
 # ==========================================
-
 class Token(BaseModel):
     access_token: str
     token_type: str
@@ -74,15 +75,14 @@ class UserResponse(BaseModel):
 # ==========================================
 # 2. STANDARD SCHEMAS (5-STAR PROGRAM)
 # ==========================================
-
 class StandardBase(BaseModel):
     id: str
     star: StarCategory
     name: str
-    purpose: str
-    requirement: str
-    evidence_guide: str
-    max_score: int = 100
+    purpose: Optional[str] = None
+    requirement: Optional[str] = None
+    evidence_guide: Optional[str] = None
+    max_score: int = 10
     active_status: str = "Active"
 
 
@@ -106,7 +106,6 @@ class StandardResponse(StandardBase):
 # ==========================================
 # 3. SUBMISSION SCHEMAS
 # ==========================================
-
 class SubmissionCreate(BaseModel):
     standard_id: str
     title: str
@@ -126,20 +125,22 @@ class SubmissionResponse(BaseModel):
     standard_id: str
     title: str
     description: str
-    evidence_url: Optional[str] = None
-    file_path: Optional[str] = None
+    evidence_url: Optional[str] = Field(None, validation_alias=AliasChoices("url", "evidence_url"))
+    file_path: Optional[str] = Field(None, validation_alias=AliasChoices("file", "file_path"))
     status: SubmissionStatus
     score_earned: int
     evaluator_notes: Optional[str] = None
     submitted_at: datetime
 
-    model_config = {"from_attributes": True}
+    model_config = {
+        "from_attributes": True,
+        "populate_by_name": True
+    }
 
 
 # ==========================================
 # 4. LEADERBOARD SCHEMAS
 # ==========================================
-
 class StarBreakdown(BaseModel):
     Efficiency: int = 0
     Network: int = 0
@@ -160,7 +161,6 @@ class LeaderboardEntry(BaseModel):
 # ==========================================
 # 5. KPI SELF-ASSESSMENT SCHEMAS
 # ==========================================
-
 class KPISubmissionCreate(BaseModel):
     chapter_name: str
     year: int = 2026

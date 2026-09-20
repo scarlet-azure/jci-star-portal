@@ -1,22 +1,28 @@
 import os
 from pathlib import Path
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi.templating import Jinja2Templates
 
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
-from app.core.security import get_password_hash, hash_password
+from app.core.security import hash_password
 from app.models.models import User, UserRole
 from app.routers import auth, chapters, standards, submissions, admin, public, leaderboard
 
-# Create Tables
+# ---------------------------------------------------------
+# PATH & STATIC / TEMPLATES SETUP
+# ---------------------------------------------------------
+BASE_DIR = Path(__file__).resolve().parent
+ROOT_DIR = BASE_DIR.parent
+
+print("DEBUG BASE_DIR (app folder):", BASE_DIR)
+print("DEBUG ROOT_DIR (project root):", ROOT_DIR)
+
+# Auto-create database tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="JCI Indonesia Star Excellence API")
-
-BASE_DIR = Path(__file__).resolve().parent
 
 # Middleware CORS
 app.add_middleware(
@@ -27,14 +33,17 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Uploads Directory
-if not os.path.exists("uploads"):
-    os.makedirs("uploads")
-app.mount("/uploads", StaticFiles(directory="uploads"), name="uploads")
+# Folder uploads berada di root project (luar folder app)
+UPLOADS_DIR = ROOT_DIR / "uploads"
+if not os.path.exists(UPLOADS_DIR):
+    os.makedirs(UPLOADS_DIR)
 
-# Static Directory
-if os.path.exists(BASE_DIR / "static"):
-    app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
+app.mount("/uploads", StaticFiles(directory=str(UPLOADS_DIR)), name="uploads")
+
+# Folder static berada di dalam folder app (app/static)
+STATIC_DIR = BASE_DIR / "static"
+if os.path.exists(STATIC_DIR):
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
 # Startup Hook: Root Admin Initializer
 @app.on_event("startup")
