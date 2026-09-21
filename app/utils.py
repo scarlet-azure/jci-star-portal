@@ -5,8 +5,10 @@ def send_reset_email(to_email: str, code: str):
     print(f"[EMAIL MOCK] Verification OTP Code for {to_email}: {code}")
 
 def calculate_chapter_scores(db: Session, chapter_name: str):
+    # Standarisasi nama chapter
     clean_chap = chapter_name.replace("JCI ", "").strip()
 
+    # Query submission yang sudah disetujui (APPROVED)
     submissions = db.query(Submission).filter(
         Submission.chapter_name.ilike(f"%{clean_chap}%"),
         Submission.status == SubmissionStatus.APPROVED.value
@@ -20,6 +22,7 @@ def calculate_chapter_scores(db: Session, chapter_name: str):
         "Impact": 0
     }
 
+    # Akumulasi poin per kategori bintang
     for sub in submissions:
         std = db.query(Standard).filter(Standard.id == sub.standard_id).first()
         if std:
@@ -41,6 +44,7 @@ def calculate_chapter_scores(db: Session, chapter_name: str):
     total_score = sum(breakdown.values())
     eff_score = breakdown["Efficiency"]
 
+    # 1. Penentuan Efficiency Band berdasarkan poin Efficiency
     if eff_score >= 135:
         band = "Ultra Efficient Local Organization Management"
     elif eff_score >= 120:
@@ -52,13 +56,20 @@ def calculate_chapter_scores(db: Session, chapter_name: str):
     else:
         band = "Under Minimum Standard (<90 pts)"
 
+    # 2. Perhitungan Jumlah Qualified Stars
     qualified_stars = 0
-    if eff_score >= 100: qualified_stars += 1
+    if eff_score >= 100:
+        qualified_stars += 1
+        
     eff_passed = eff_score >= 90
-    if eff_passed and breakdown["Network"] >= 250: qualified_stars += 1
-    if eff_passed and breakdown["Experience"] >= 250: qualified_stars += 1
-    if eff_passed and breakdown["Outreach"] >= 250: qualified_stars += 1
-    if eff_passed and breakdown["Impact"] >= 250: qualified_stars += 1
+    if eff_passed and breakdown["Network"] >= 250:
+        qualified_stars += 1
+    if eff_passed and breakdown["Experience"] >= 250:
+        qualified_stars += 1
+    if eff_passed and breakdown["Outreach"] >= 250:
+        qualified_stars += 1
+    if eff_passed and breakdown["Impact"] >= 250:
+        qualified_stars += 1
 
     return {
         "chapter_name": chapter_name,

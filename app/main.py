@@ -8,7 +8,7 @@ from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
 from app.core.security import hash_password
 from app.models.models import User, UserRole
-from app.routers import auth, chapters, standards, submissions, admin, public, leaderboard
+from app.routers import auth, chapters, standards, submissions, admin, public, leaderboard, kpi
 
 # ---------------------------------------------------------
 # PATH & STATIC / TEMPLATES SETUP
@@ -78,3 +78,4 @@ app.include_router(standards.router, tags=["Standards"])
 app.include_router(submissions.router, prefix="/submissions", tags=["Submissions"])
 app.include_router(leaderboard.router, tags=["Leaderboard"])
 app.include_router(admin.router, prefix="/admin", tags=["Admin"])
+app.include_router(kpi.router)

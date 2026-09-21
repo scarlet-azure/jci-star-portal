@@ -29,7 +29,9 @@ import {
 
 import { 
     loadChapters, 
-    handleAddChapter, 
+    openAddChapterModal,
+    closeAddChapterModal,
+    handleAddChapterForm, 
     handleDeleteChapter, 
     openStandardModalForAdd, 
     openStandardModalForEdit, 
@@ -43,11 +45,30 @@ import {
     renderEvaluatorPortal, 
     renderAdminStandardsList, 
     loadPendingUsers, 
-    approveUserAction 
+    approveUserAction,
+    switchAdminSubTab,
+    filterAuditStatus,
+    loadHandbooks,
+    loadAnnualArchives,
+    loadAdminKpiSubmissions
 } from './admin.js';
 
-import { renderLeaderboard, loadAnnualArchives } from './leaderboard.js';
-import { switchTab, changeChapter, toggleKpiSection, handleKPISubmit } from './ui.js';
+import { 
+    loadLeaderboard, 
+    loadStarLeaderboard, 
+    loadKpiLeaderboard, 
+    switchLeaderboardSubTab 
+} from './leaderboard.js';
+
+import { 
+    switchTab, 
+    changeChapter, 
+    toggleKpiSection,
+    loadChapterKpiFormData,
+    handleKPISubmit,
+    saveKpiDraft,
+    submitKpiFinal
+} from './ui.js';
 
 let standardsData = [];
 let chapterSubmissions = {};
@@ -55,28 +76,61 @@ let chapterSubmissions = {};
 export async function loadData() {
     try {
         await loadChapters();
+        
+        // Memuat draft KPI form chapter yang aktif
+        try {
+            if (typeof loadChapterKpiFormData === 'function') {
+                await loadChapterKpiFormData();
+            }
+        } catch (kpiErr) {
+            console.warn("Notice: Failed to load chapter KPI form data", kpiErr);
+        }
 
+        try {
+            await loadHandbooks();
+        } catch (hErr) {
+            console.warn("Notice: Failed loading handbooks", hErr);
+        }
+
+        // Ambil Data Standards, Submissions, dan Leaderboard secara paralel
         const [stdRes, subRes, leadRes] = await Promise.all([
             fetchAPI('/standards'),
             fetchAPI(`/submissions/${encodeURIComponent(state.currentChapter)}`),
             fetchAPI('/leaderboard')
         ]);
 
-        const stdJson = await stdRes.json();
-        standardsData = Array.isArray(stdJson) ? stdJson : (stdJson.data || stdJson.standards || []);
-
-        const subRaw = await subRes.json();
-        chapterSubmissions = {};
-        if (Array.isArray(subRaw)) {
-            subRaw.forEach(s => { chapterSubmissions[s.standard_id] = s; });
-        } else if (typeof subRaw === 'object' && subRaw !== null) {
-            chapterSubmissions = subRaw;
+        // SAFE PARSING STANDARDS
+        let standardsData = [];
+        if (stdRes && stdRes.ok) {
+            const stdJson = await stdRes.json();
+            standardsData = Array.isArray(stdJson) ? stdJson : (stdJson.data || stdJson.standards || []);
+        } else {
+            console.error("Gagal mengambil /standards - Status:", stdRes?.status);
         }
 
-        const leaderboardData = await leadRes.json();
-        const leadList = Array.isArray(leaderboardData) ? leaderboardData : [];
+        // SAFE PARSING SUBMISSIONS
+        chapterSubmissions = {};
+        if (subRes && subRes.ok) {
+            const subRaw = await subRes.json();
+            if (Array.isArray(subRaw)) {
+                subRaw.forEach(s => { chapterSubmissions[s.standard_id] = s; });
+            } else if (typeof subRaw === 'object' && subRaw !== null) {
+                chapterSubmissions = subRaw;
+            }
+        } else {
+            console.error("Gagal mengambil /submissions - Status:", subRes?.status);
+        }
 
-        // Flexible Chapter Matching
+        // SAFE PARSING LEADERBOARD
+        let leadList = [];
+        if (leadRes && leadRes.ok) {
+            const leaderboardData = await leadRes.json();
+            leadList = Array.isArray(leaderboardData) ? leaderboardData : [];
+        } else {
+            console.error("Gagal mengambil /leaderboard - Status:", leadRes?.status);
+        }
+
+        // Flexible Chapter Matching untuk Dashboard Widget Leaderboard
         const targetClean = state.currentChapter.replace(/jci/i, '').trim().toLowerCase();
 
         let currentLeaderboard = leadList.find(l => {
@@ -89,7 +143,7 @@ export async function loadData() {
             breakdown: { Efficiency: 0, Network: 0, Experience: 0, Outreach: 0, Impact: 0 }
         };
 
-        // Render Seluruh Komponen UI
+        // Render Seluruh Komponen Utama UI
         renderCategoryPills(standardsData);
         renderDashboard(currentLeaderboard, leadList, chapterSubmissions);
         renderDeadlineCalendarWidget(standardsData, chapterSubmissions);
@@ -97,11 +151,31 @@ export async function loadData() {
         renderStandardsList(standardsData, chapterSubmissions);
         renderEvaluatorPortal(chapterSubmissions);
         renderAdminStandardsList(standardsData);
-        renderLeaderboard(leadList);
-        loadAnnualArchives();
+        
+        // Render Star Leaderboard Table
+        loadStarLeaderboard(leadList);
+
+        // Isolasi error untuk fungsi opsional
+        try {
+            await loadAnnualArchives(state.currentChapter);
+        } catch (archErr) {
+            console.warn("Notice: Annual archives tidak ditemukan atau gagal dimuat.", archErr);
+        }
+
+        try {
+            await loadPendingUsers();
+        } catch (userErr) {
+            console.warn("Notice: Failed to load pending users.", userErr);
+        }
+
+        try {
+            await loadAdminKpiSubmissions();
+        } catch (adminKpiErr) {
+            console.warn("Notice: Failed to load admin KPI submissions.", adminKpiErr);
+        }
 
     } catch (err) {
-        console.error("Error loading data:", err);
+        console.error("Critical error loading data:", err);
     }
 }
 
@@ -120,7 +194,10 @@ window.changeChapter = changeChapter;
 window.filterCategory = filterCategory;
 window.changeCalMonth = changeCalMonth;
 window.toggleKpiSection = toggleKpiSection;
+window.loadChapterKpiFormData = loadChapterKpiFormData;
 window.handleKPISubmit = handleKPISubmit;
+window.saveKpiDraft = saveKpiDraft;
+window.submitKpiFinal = submitKpiFinal;
 window.updateFileLabel = updateFileLabel;
 
 window.openSubmissionModal = (stdId, stdName, defaultDeadline) => openSubmissionModal(stdId, stdName, defaultDeadline, chapterSubmissions);
@@ -128,7 +205,9 @@ window.closeSubmissionModal = closeSubmissionModal;
 window.handleModalSubmit = handleModalSubmit;
 
 window.loadChapters = loadChapters;
-window.handleAddChapter = handleAddChapter;
+window.openAddChapterModal = openAddChapterModal;
+window.closeAddChapterModal = closeAddChapterModal;
+window.handleAddChapterForm = handleAddChapterForm;
 window.handleDeleteChapter = handleDeleteChapter;
 
 window.openStandardModalForAdd = openStandardModalForAdd;
@@ -143,6 +222,13 @@ window.handleAuditStatusChange = handleAuditStatusChange;
 window.handleAuditFormSubmit = handleAuditFormSubmit;
 window.loadPendingUsers = loadPendingUsers;
 window.approveUserAction = approveUserAction;
+window.switchAdminSubTab = switchAdminSubTab;
+window.filterAuditStatus = filterAuditStatus;
+
+window.loadLeaderboard = loadLeaderboard;
+window.loadStarLeaderboard = loadStarLeaderboard;
+window.loadKpiLeaderboard = loadKpiLeaderboard;
+window.switchLeaderboardSubTab = switchLeaderboardSubTab;
 
 document.addEventListener('DOMContentLoaded', () => {
     checkAuthSession(loadData);

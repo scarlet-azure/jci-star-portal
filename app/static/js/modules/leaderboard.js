@@ -1,9 +1,36 @@
 import { fetchAPI } from './api.js';
-import { state } from './auth.js';
 
+let starLeaderboardCache = [];
+let kpiLeaderboardCache = [];
+
+// ==========================================
+// 1. MAIN FETCH & RENDER LEADERBOARD
+// ==========================================
+export async function loadLeaderboard() {
+    try {
+        const resStar = await fetchAPI('/leaderboard');
+        if (resStar && resStar.ok) {
+            starLeaderboardCache = await resStar.json();
+            renderLeaderboard(starLeaderboardCache);
+        }
+
+        await loadKpiLeaderboard();
+    } catch (err) {
+        console.error("Gagal memuat data Leaderboard:", err);
+    }
+}
+
+// ==========================================
+// 2. RENDER STAR PROGRAM LEADERBOARD
+// ==========================================
 export function renderLeaderboard(data = []) {
-    const tbody = document.getElementById('leaderboardBody');
+    const tbody = document.getElementById('leaderboardBody') || document.getElementById('starLeaderboardTable');
     if (!tbody) return;
+    
+    if (!Array.isArray(data) || data.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">Belum ada data Star Program Leaderboard.</td></tr>`;
+        return;
+    }
     
     tbody.innerHTML = data.map((item) => {
         const b = item.breakdown || item.scores || {};
@@ -13,62 +40,129 @@ export function renderLeaderboard(data = []) {
         const out = b.Outreach ?? b.outreach ?? b.O ?? 0;
         const imp = b.Impact ?? b.impact ?? b.I ?? 0;
 
+        let rankBadge = `<span class="font-bold text-slate-500">#${item.rank || '-'}</span>`;
+        if (item.rank === 1) rankBadge = `<span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-black text-xs">🥇 #1</span>`;
+        else if (item.rank === 2) rankBadge = `<span class="px-2.5 py-1 rounded-full bg-slate-200 text-slate-800 font-black text-xs">🥈 #2</span>`;
+        else if (item.rank === 3) rankBadge = `<span class="px-2.5 py-1 rounded-full bg-amber-700/10 text-amber-900 font-black text-xs">🥉 #3</span>`;
+
         return `
-            <tr class="hover:bg-slate-50 transition">
-                <td class="py-4 px-4 font-extrabold text-slate-700">#${item.rank}</td>
-                <td class="py-4 px-4 font-bold text-slate-900">${item.chapter_name}</td>
-                <td class="py-4 px-4 font-bold text-amber-600">
-                    <span class="bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md">
-                        <i class="fa-solid fa-star text-jci-gold"></i> ${item.qualified_stars} / 5
+            <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                <!-- 1. Rank -->
+                <td class="py-4 px-4 text-center font-extrabold whitespace-nowrap">${rankBadge}</td>
+                
+                <!-- 2. Local Organization -->
+                <td class="py-4 px-4 font-bold text-slate-900 whitespace-nowrap">${item.chapter_name || 'Unknown'}</td>
+                
+                <!-- 3. Qualified Stars -->
+                <td class="py-4 px-4 text-center whitespace-nowrap">
+                    <span class="bg-amber-50 border border-amber-200 px-2.5 py-1 rounded-md font-bold text-amber-600 inline-flex items-center gap-1">
+                        <i class="fa-solid fa-star text-amber-400"></i> ${item.qualified_stars ?? 0} / 5
                     </span>
                 </td>
-                <td class="py-4 px-4 text-xs font-semibold text-slate-600">${item.efficiency_band}</td>
-                <td class="py-4 px-4 font-black text-slate-900 text-sm">${item.total_score} pts</td>
-                <td class="py-4 px-4 text-[11px] font-semibold space-x-1.5">
-                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold">E:${eff}</span>
-                    <span class="px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-700 font-bold">N:${net}</span>
-                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold">Ex:${exp}</span>
-                    <span class="px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 font-bold">O:${out}</span>
-                    <span class="px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold">I:${imp}</span>
+                
+                <!-- 4. Efficiency Band -->
+                <td class="py-4 px-4 text-center text-xs font-semibold text-slate-600 whitespace-nowrap">${item.efficiency_band || '-'}</td>
+                
+                <!-- 5. Total Points -->
+                <td class="py-4 px-4 text-right font-black text-slate-900 text-sm whitespace-nowrap">${item.total_score ?? 0} pts</td>
+                
+                <!-- 6. Stars Breakdown -->
+                <td class="py-4 px-4 text-center text-[11px] font-semibold space-x-1.5 whitespace-nowrap">
+                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-700 font-bold border border-blue-100">E:${eff}</span>
+                    <span class="px-1.5 py-0.5 rounded bg-cyan-50 text-cyan-700 font-bold border border-cyan-100">N:${net}</span>
+                    <span class="px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 font-bold border border-emerald-100">Ex:${exp}</span>
+                    <span class="px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 font-bold border border-purple-100">O:${out}</span>
+                    <span class="px-1.5 py-0.5 rounded bg-rose-50 text-rose-700 font-bold border border-rose-100">I:${imp}</span>
                 </td>
             </tr>
         `;
     }).join('');
 }
 
-export async function loadAnnualArchives() {
-    const container = document.getElementById('archiveListContainer');
-    if (!container) return;
+// Alias agar kompatibel jika dipanggil loadStarLeaderboard
+export const loadStarLeaderboard = renderLeaderboard;
 
+// ==========================================
+// 3. FETCH & RENDER KPI LEADERBOARD
+// ==========================================
+export async function loadKpiLeaderboard() {
     try {
-        const res = await fetchAPI(`/archives/${encodeURIComponent(state.currentChapter)}`);
-        if (!res.ok) {
-            container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border">Belum ada arsip tahunan untuk ${state.currentChapter}.</div>`;
+        const res = await fetchAPI('/leaderboard/kpi');
+        if (!res || !res.ok) return;
+
+        kpiLeaderboardCache = await res.json();
+        const tbody = document.getElementById('kpiLeaderboardTable');
+        if (!tbody) return;
+
+        if (!Array.isArray(kpiLeaderboardCache) || kpiLeaderboardCache.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400">Belum ada data KPI Self-Assessment.</td></tr>`;
             return;
         }
 
-        const archives = await res.json();
+        tbody.innerHTML = kpiLeaderboardCache.map((item, idx) => {
+            let rankBadge = `<span class="font-bold text-slate-500">#${idx + 1}</span>`;
+            if (idx === 0) rankBadge = `<span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-black text-xs">🥇 #1</span>`;
+            else if (idx === 1) rankBadge = `<span class="px-2.5 py-1 rounded-full bg-slate-200 text-slate-800 font-black text-xs">🥈 #2</span>`;
+            else if (idx === 2) rankBadge = `<span class="px-2.5 py-1 rounded-full bg-amber-700/10 text-amber-900 font-black text-xs">🥉 #3</span>`;
 
-        if (!Array.isArray(archives) || archives.length === 0) {
-            container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border">Belum ada arsip tahunan untuk ${state.currentChapter}.</div>`;
-            return;
-        }
+            let statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">${item.status || 'Draft'}</span>`;
+            if (item.status === 'OK / Approved') {
+                statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">🟢 Approved</span>`;
+            } else if (item.status === 'Needs Clarification') {
+                statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300">🟡 Clarification</span>`;
+            } else if (item.status === 'Rejected') {
+                statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-rose-100 text-rose-800 border border-rose-300">🔴 Rejected</span>`;
+            } else if (item.status === 'Submitted') {
+                statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300">🔵 Submitted</span>`;
+            }
 
-        container.innerHTML = archives.map(a => `
-            <div class="p-4 bg-slate-50 border rounded-xl flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-bold text-jci-blue">Tahun ${a.year}</span>
-                    <h4 class="font-extrabold text-slate-800 text-sm mt-0.5">${a.chapter_name}</h4>
-                    <p class="text-xs text-slate-500">${a.efficiency_band}</p>
-                </div>
-                <div class="text-right">
-                    <span class="text-xs font-bold text-amber-600"><i class="fa-solid fa-star"></i> ${a.qualified_stars} Stars</span>
-                    <div class="text-sm font-black text-slate-800">${a.total_score} pts</div>
-                </div>
-            </div>
-        `).join('');
+            const sec = item.sections || { s1: 0, s2: 0, s3: 0, s4_10: 0 };
+
+            return `
+                <tr class="hover:bg-slate-50 transition border-b border-slate-100">
+                    <td class="py-4 px-4 text-center whitespace-nowrap">${rankBadge}</td>
+                    <td class="py-4 px-4 font-extrabold text-slate-800 whitespace-nowrap">${item.chapter_name}</td>
+                    <td class="py-4 px-4 text-center whitespace-nowrap">${statusBadge}</td>
+                    <td class="py-4 px-4 text-center font-semibold text-slate-600 whitespace-nowrap">${sec.s1}</td>
+                    <td class="py-4 px-4 text-center font-semibold text-slate-600 whitespace-nowrap">${sec.s2}</td>
+                    <td class="py-4 px-4 text-center font-semibold text-slate-600 whitespace-nowrap">${sec.s3}</td>
+                    <td class="py-4 px-4 text-center font-semibold text-slate-600 whitespace-nowrap">${sec.s4_10}</td>
+                    <td class="py-4 px-4 text-right font-black text-emerald-700 text-sm whitespace-nowrap">${item.evaluator_score || 0} pts</td>
+                </tr>
+            `;
+        }).join('');
     } catch (err) {
-        console.error("Gagal load archives (non-fatal):", err);
-        container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border">Belum ada arsip tahunan.</div>`;
+        console.error("Gagal memuat KPI Leaderboard:", err);
     }
 }
+
+// ==========================================
+// 4. SWITCH LEADERBOARD SUB-TABS
+// ==========================================
+export function switchLeaderboardSubTab(subTab) {
+    document.querySelectorAll('.lb-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.lb-subtab-btn').forEach(btn => {
+        btn.classList.remove('bg-white', 'text-jci-blue', 'shadow-xs');
+        btn.classList.add('text-slate-600');
+    });
+
+    const targetContent = document.getElementById(`lb-content-${subTab}`);
+    const targetBtn = document.getElementById(`lb-subtab-${subTab}`);
+
+    if (targetContent) targetContent.classList.remove('hidden');
+    if (targetBtn) {
+        targetBtn.classList.add('bg-white', 'text-jci-blue', 'shadow-xs');
+        targetBtn.classList.remove('text-slate-600');
+    }
+
+    if (subTab === 'kpi') {
+        loadKpiLeaderboard();
+    }
+}
+
+// BIND HELPER GLOBAL
+window.loadLeaderboard = loadLeaderboard;
+window.renderLeaderboard = renderLeaderboard;
+window.loadStarLeaderboard = renderLeaderboard;
+window.loadKpiLeaderboard = loadKpiLeaderboard;
+window.switchLeaderboardSubTab = switchLeaderboardSubTab;

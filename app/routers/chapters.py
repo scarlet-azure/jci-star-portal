@@ -2,39 +2,55 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.database import get_db
-from app.models.models import Chapter
-from app.schemas.schemas import ChapterCreate, ChapterResponse  # Sesuaikan schema kamu
+
+from app.models.models import Chapter, User, Submission, UserRole, SubmissionStatus
+from app.schemas.schemas import ChapterCreate, ChapterResponse
+from app.utils import calculate_chapter_scores
 
 router = APIRouter()
 
-# 1. PASTIKAN RUTE GET INI ADA (Menangani GET /chapters)
 @router.get("/", response_model=List[ChapterResponse])
 def get_chapters(db: Session = Depends(get_db)):
-    """Mengambil daftar seluruh chapter JCI"""
-    return db.query(Chapter).all()
+    try:
+        chapters = db.query(Chapter).all()
+        result = []
+        
+        for c in chapters:
+            clean_name = c.name.replace("JCI ", "").strip()
+            
+            # Cari PIC Email
+            pic = db.query(User).filter(
+                User.role.in_([UserRole.CHAPTER_PIC, UserRole.CHAPTER_USER]),
+                User.chapter_name.ilike(f"%{clean_name}%")
+            ).first()
+            
+            # Hitung Skor via Utils
+            try:
+                scores_data = calculate_chapter_scores(db, c.name)
+                total_score = scores_data.get("total_score", 0)
+            except Exception as score_err:
+                print(f"Error calculating score for {c.name}: {score_err}")
+                total_score = 0
+            
+            # Hitung Pending Reviews
+            pending_count = db.query(Submission).filter(
+                Submission.chapter_name.ilike(f"%{clean_name}%"),
+                Submission.status.in_([SubmissionStatus.PENDING, "Pending", "Submitted", "Pending Review"])
+            ).count()
 
-# 2. RUTE POST (Menangani POST /chapters)
-@router.post("/", status_code=status.HTTP_201_CREATED)
-def create_chapter(chapter_in: ChapterCreate, db: Session = Depends(get_db)):
-    """Menambahkan chapter baru"""
-    existing = db.query(Chapter).filter(Chapter.name == chapter_in.name).first()
-    if existing:
-        raise HTTPException(status_code=400, detail="Chapter sudah terdaftar.")
-    
-    new_chapter = Chapter(name=chapter_in.name)
-    db.add(new_chapter)
-    db.commit()
-    db.refresh(new_chapter)
-    return {"message": "Chapter berhasil ditambahkan", "data": new_chapter}
+            # Menggunakan getattr agar tidak crash jika nvp_name belum ada di DB
+            nvp_val = getattr(c, "nvp_name", None) or "Unassigned"
 
-# 3. RUTE DELETE (Menangani DELETE /chapters/{chapter_name})
-@router.delete("/{chapter_name}")
-def delete_chapter(chapter_name: str, db: Session = Depends(get_db)):
-    """Menghapus chapter"""
-    chap = db.query(Chapter).filter(Chapter.name == chapter_name).first()
-    if not chap:
-        raise HTTPException(status_code=404, detail="Chapter tidak ditemukan.")
-    
-    db.delete(chap)
-    db.commit()
-    return {"message": f"Chapter '{chapter_name}' berhasil dihapus."}
+            result.append({
+                "id": c.id,
+                "name": c.name,
+                "nvp_name": nvp_val,
+                "pic_email": pic.email if pic else "-",
+                "total_score": total_score,
+                "pending_reviews": pending_count
+            })
+
+        return result
+    except Exception as e:
+        print("CRITICAL ERROR in get_chapters:", e)
+        raise HTTPException(status_code=500, detail=str(e))

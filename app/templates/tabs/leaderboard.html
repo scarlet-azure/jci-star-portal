@@ -1,23 +1,66 @@
 <div id="tab-leaderboard" class="tab-content space-y-6 hidden">
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-6">
-        <div class="border-b pb-4 flex items-center gap-2">
-            <span class="text-jci-gold text-2xl"><i class="fa-solid fa-trophy"></i></span>
-            <h3 class="text-xl font-extrabold text-slate-900">JCI Indonesia Chapter Star Leaderboard</h3>
+        
+        <!-- HEADER & TOGGLE SUB-TABS -->
+        <div class="border-b pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div class="flex items-center gap-2">
+                <span class="text-jci-gold text-2xl"><i class="fa-solid fa-trophy"></i></span>
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-900">JCI Indonesia Chapter Leaderboard</h3>
+                    <p class="text-xs text-slate-500 mt-0.5">Peringkat resmi performa Chapter JCI Indonesia tahun 2026.</p>
+                </div>
+            </div>
+
+            <!-- TOGGLE SWITCHER -->
+            <div class="flex items-center bg-slate-100 p-1.5 rounded-xl gap-1">
+                <button onclick="switchLeaderboardSubTab('star')" id="lb-subtab-star" class="lb-subtab-btn px-4 py-2 text-xs font-extrabold rounded-lg bg-white text-jci-blue shadow-xs transition flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-star text-amber-400"></i> Star Program
+                </button>
+                <button onclick="switchLeaderboardSubTab('kpi')" id="lb-subtab-kpi" class="lb-subtab-btn px-4 py-2 text-xs font-extrabold rounded-lg text-slate-600 hover:bg-white/50 transition flex items-center gap-2 cursor-pointer">
+                    <i class="fa-solid fa-chart-line text-emerald-600"></i> 10-Aspect KPI
+                </button>
+            </div>
         </div>
-        <div class="overflow-x-auto">
+
+        <!-- 1. STAR LEADERBOARD CONTENT -->
+        <div id="lb-content-star" class="lb-content overflow-x-auto">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-slate-50 border-b text-[11px] font-bold text-slate-400 uppercase tracking-wider">
-                        <th class="py-3.5 px-4">Rank</th>
+                        <th class="py-3.5 px-4 text-center w-16">Rank</th>
                         <th class="py-3.5 px-4">Local Organization</th>
-                        <th class="py-3.5 px-4">Qualified Stars</th>
-                        <th class="py-3.5 px-4">Efficiency Band</th>
-                        <th class="py-3.5 px-4">Total Points</th>
-                        <th class="py-3.5 px-4">Stars Breakdown</th>
+                        <th class="py-3.5 px-4 text-center">Qualified Stars</th>
+                        <th class="py-3.5 px-4 text-center">Efficiency Band</th>
+                        <th class="py-3.5 px-4 text-right">Total Points</th>
+                        <th class="py-3.5 px-4 text-center">Stars Breakdown</th>
                     </tr>
                 </thead>
-                <tbody id="leaderboardBody" class="divide-y divide-slate-100 text-xs"></tbody>
+                <tbody id="leaderboardBody" class="divide-y divide-slate-100 text-xs">
+                    <!-- Rendered by JS -->
+                </tbody>
             </table>
         </div>
+
+        <!-- 2. KPI LEADERBOARD CONTENT -->
+        <div id="lb-content-kpi" class="lb-content overflow-x-auto hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr class="bg-slate-50 border-b text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                        <th class="py-3.5 px-4 text-center w-16">Rank</th>
+                        <th class="py-3.5 px-4">Local Organization</th>
+                        <th class="py-3.5 px-4 text-center">Status</th>
+                        <th class="py-3.5 px-4 text-center" title="1. Membership Management">S1: Mem</th>
+                        <th class="py-3.5 px-4 text-center" title="2. Legality & Compliance">S2: Leg</th>
+                        <th class="py-3.5 px-4 text-center" title="3. PoA & Strategic Plan">S3: PoA</th>
+                        <th class="py-3.5 px-4 text-center" title="4-10. Action Framework & Impact">S4-10: Act</th>
+                        <th class="py-3.5 px-4 text-right">Total KPI Score</th>
+                    </tr>
+                </thead>
+                <tbody id="kpiLeaderboardTable" class="divide-y divide-slate-100 text-xs">
+                    <!-- Rendered by JS -->
+                </tbody>
+            </table>
+        </div>
+
     </div>
 </div>

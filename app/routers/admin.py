@@ -1,9 +1,11 @@
+import os
+import shutil
 from typing import List
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Form, File, UploadFile, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.models.models import User, UserRole, Submission, Standard, AnnualArchive, Chapter
+from app.models.models import User, UserRole, Submission, Standard, AnnualArchive, Chapter, HandbookReference
 from app.schemas.schemas import (
     UserResponse,
     StandardCreate,
@@ -15,6 +17,9 @@ from app.schemas.schemas import (
 from app.utils import calculate_chapter_scores
 
 router = APIRouter()
+
+UPLOAD_DIR = "uploads/handbooks"
+os.makedirs(UPLOAD_DIR, exist_ok=True)
 
 # ==========================================
 # 1. USER MANAGEMENT (APPROVE / REJECT)
@@ -158,3 +163,57 @@ def archive_annual_cycle(year: int, db: Session = Depends(get_db)):
     db.query(Submission).delete()
     db.commit()
     return {"message": f"Siklus tahun {year} berhasil diarsipkan dan data submission di-reset!"}
+    
+# ==========================================
+# 5. HANDBOOK
+# ==========================================
+from app.models.models import HandbookReference
+from app.schemas.schemas import HandbookCreate, HandbookResponse
+
+@router.post("/handbooks", status_code=status.HTTP_201_CREATED)
+async def create_handbook(
+    title: str = Form(...),
+    category: str = Form("Handbook"),
+    description: str = Form(""),
+    file_url: str = Form(""),
+    file: UploadFile = File(None),
+    db: Session = Depends(get_db)
+):
+    final_url = file_url
+
+    # Jika user mengunggah berkas fisik
+    if file:
+        file_filename = f"{int(datetime.now().timestamp())}_{file.filename}"
+        file_path = os.path.join(UPLOAD_DIR, file_filename)
+        
+        with open(file_path, "wb") as buffer:
+            shutil.copyfileobj(file.file, buffer)
+            
+        final_url = f"/uploads/handbooks/{file_filename}"
+
+    if not final_url:
+        raise HTTPException(
+            status_code=400, 
+            detail="Harus menyertakan unggahan berkas atau tautan URL."
+        )
+
+    new_doc = HandbookReference(
+        title=title,
+        category=category,
+        description=description,
+        file_url=final_url
+    )
+    db.add(new_doc)
+    db.commit()
+    db.refresh(new_doc)
+
+    return {"message": "Dokumen berhasil disimpan", "data": new_doc}
+
+@router.delete("/handbooks/{doc_id}")
+def delete_handbook(doc_id: int, db: Session = Depends(get_db)):
+    doc = db.query(HandbookReference).filter(HandbookReference.id == doc_id).first()
+    if not doc:
+        raise HTTPException(status_code=404, detail="Dokumen tidak ditemukan.")
+    db.delete(doc)
+    db.commit()
+    return {"message": "Handbook berhasil dihapus."}

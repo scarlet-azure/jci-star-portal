@@ -73,7 +73,7 @@ class Chapter(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String, unique=True, index=True, nullable=False)
-
+    nvp_name = Column(String, nullable=True, index=True)  # Tambahkan kolom ini
 
 # ==========================================
 # 4. STANDARD MODEL (5-STAR PROGRAM)
@@ -170,3 +170,16 @@ class KPISubmission(Base):
     
     submitted_at = Column(DateTime, default=datetime.utcnow, nullable=False)
     evaluated_at = Column(DateTime, nullable=True)
+    
+# ==========================================
+# 8. HANDBOOK REFERENCE MODEL
+# ==========================================
+class HandbookReference(Base):
+    __tablename__ = "handbook_references"
+
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    file_url = Column(String, nullable=False)  # Link Drive / URL File PDF
+    category = Column(String, default="General", nullable=False) # e.g. "Handbook", "Guide", "Template"
+    uploaded_at = Column(DateTime, default=datetime.utcnow, nullable=False)

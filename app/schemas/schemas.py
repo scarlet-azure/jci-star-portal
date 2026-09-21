@@ -9,16 +9,21 @@ from app.models.models import StarCategory, SubmissionStatus, UserRole
 # ==========================================
 class ChapterBase(BaseModel):
     name: str
+    nvp_name: Optional[str] = None
 
 class ChapterCreate(ChapterBase):
     pass
 
 class ChapterResponse(ChapterBase):
     id: Optional[int] = None
+    nvp_name: Optional[str] = "Unassigned"
+    pic_email: Optional[str] = None
+    total_score: int = 0
+    pending_reviews: int = 0
 
     class Config:
         from_attributes = True
-
+        
 # ==========================================
 # 1. AUTH & USER SCHEMAS
 # ==========================================
@@ -174,16 +179,27 @@ class KPISubmissionCreate(BaseModel):
     branding_data: Optional[Dict[str, Any]] = None
     awarding_data: Optional[Dict[str, Any]] = None
     misc_data: Optional[Dict[str, Any]] = None
-
+    status: Optional[str] = "Submitted"  # Bisa bernilai "Draft" atau "Submitted"
 
 class KPISubmissionReview(BaseModel):
     evaluator_score: int
     evaluator_feedback: Optional[str] = None
-    status: str = "Evaluated"
+    status: str  # Nilai: "OK / Approved", "Needs Clarification", "Rejected", "Needs Revision"
 
-
-class KPISubmissionResponse(KPISubmissionCreate):
+class KPISubmissionResponse(BaseModel):
     id: int
+    chapter_name: str
+    year: int
+    membership_data: Optional[Dict[str, Any]] = None
+    legality_data: Optional[Dict[str, Any]] = None
+    poa_data: Optional[Dict[str, Any]] = None
+    impact_data: Optional[Dict[str, Any]] = None
+    skill_data: Optional[Dict[str, Any]] = None
+    national_events_data: Optional[Dict[str, Any]] = None
+    intl_events_data: Optional[Dict[str, Any]] = None
+    branding_data: Optional[Dict[str, Any]] = None
+    awarding_data: Optional[Dict[str, Any]] = None
+    misc_data: Optional[Dict[str, Any]] = None
     evaluator_score: int
     evaluator_feedback: Optional[str] = None
     status: str
@@ -192,6 +208,9 @@ class KPISubmissionResponse(KPISubmissionCreate):
 
     model_config = {"from_attributes": True}
 
+# ==========================================
+# 6. HANDBOOK SCHEMAS
+# ==========================================
 
 class KPILeaderboardEntry(BaseModel):
     rank: int
@@ -199,3 +218,16 @@ class KPILeaderboardEntry(BaseModel):
     kpi_score: int
     status: str
     submitted_at: Optional[datetime] = None
+    
+class HandbookCreate(BaseModel):
+    title: str
+    description: Optional[str] = None
+    file_url: str
+    category: str = "Handbook"
+
+class HandbookResponse(HandbookCreate):
+    id: int
+    uploaded_at: datetime
+
+    class Config:
+        from_attributes = True
