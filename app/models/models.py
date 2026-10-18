@@ -70,10 +70,10 @@ class User(Base):
 # ==========================================
 class Chapter(Base):
     __tablename__ = "chapters"
-
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String, unique=True, index=True, nullable=False)
-    nvp_name = Column(String, nullable=True, index=True)  # Tambahkan kolom ini
+    name = Column(String, unique=True, index=True)
+    nvp_name = Column(String, nullable=True, default="Unassigned")
+    pic_email = Column(String, nullable=True, default="")
 
 # ==========================================
 # 4. STANDARD MODEL (5-STAR PROGRAM)

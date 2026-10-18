@@ -1,6 +1,7 @@
 import os
 import shutil
 from typing import List
+from datetime import datetime
 from fastapi import APIRouter, Depends, Form, File, UploadFile, HTTPException, status
 from sqlalchemy.orm import Session
 
@@ -42,7 +43,6 @@ def approve_user(user_id: int, action: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="User tidak ditemukan.")
 
     if action.lower() == "approve":
-        # Jika ada field status/is_approved di model User, update di sini
         db.commit()
         return {"message": f"User {user.full_name} berhasil disetujui."}
     elif action.lower() == "reject":
@@ -123,6 +123,7 @@ def delete_standard(std_id: str, db: Session = Depends(get_db)):
     db.commit()
     return {"message": f"Standard {std_id} dan seluruh submission terkait berhasil dihapus."}
 
+
 @router.get("/archives/{chapter_name}")
 def get_chapter_archives(chapter_name: str, db: Session = Depends(get_db)):
     clean_chap = chapter_name.replace("JCI ", "").strip()
@@ -131,6 +132,7 @@ def get_chapter_archives(chapter_name: str, db: Session = Depends(get_db)):
     ).order_by(AnnualArchive.year.desc()).all()
     
     return archives or []
+
 
 # ==========================================
 # 4. ANNUAL ARCHIVE & RESET
@@ -141,7 +143,6 @@ def archive_annual_cycle(year: int, db: Session = Depends(get_db)):
     """Arsip skor tahunan seluruh chapter dan reset submission untuk siklus baru."""
     chapters = db.query(Chapter).all()
     if not chapters:
-        # Fallback ambil dari chapter_name di User jika tabel Chapter belum terisi
         chapter_names = db.query(User.chapter_name).distinct().all()
         chapter_list = [c[0] for c in chapter_names if c[0]]
     else:
@@ -159,16 +160,14 @@ def archive_annual_cycle(year: int, db: Session = Depends(get_db)):
         )
         db.add(archive)
 
-    # Reset seluruh data submission untuk siklus berikutnya
     db.query(Submission).delete()
     db.commit()
     return {"message": f"Siklus tahun {year} berhasil diarsipkan dan data submission di-reset!"}
-    
+
+
 # ==========================================
 # 5. HANDBOOK
 # ==========================================
-from app.models.models import HandbookReference
-from app.schemas.schemas import HandbookCreate, HandbookResponse
 
 @router.post("/handbooks", status_code=status.HTTP_201_CREATED)
 async def create_handbook(
@@ -181,7 +180,6 @@ async def create_handbook(
 ):
     final_url = file_url
 
-    # Jika user mengunggah berkas fisik
     if file:
         file_filename = f"{int(datetime.now().timestamp())}_{file.filename}"
         file_path = os.path.join(UPLOAD_DIR, file_filename)
@@ -208,6 +206,7 @@ async def create_handbook(
     db.refresh(new_doc)
 
     return {"message": "Dokumen berhasil disimpan", "data": new_doc}
+
 
 @router.delete("/handbooks/{doc_id}")
 def delete_handbook(doc_id: int, db: Session = Depends(get_db)):

@@ -18,11 +18,12 @@
         <button onclick="switchAdminSubTab('standards')" id="subtab-btn-standards" class="admin-subtab-btn px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center gap-2 whitespace-nowrap">
             <i class="fa-solid fa-list-check"></i> Standards Criteria
         </button>
+        <button onclick="switchAdminSubTab('kpi-template')" id="subtab-btn-kpi-template" class="admin-subtab-btn px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center gap-2 whitespace-nowrap">
+            <i class="fa-solid fa-sliders"></i> Edit Form KPI Template
+        </button>
         <button onclick="switchAdminSubTab('handbooks')" id="subtab-btn-handbooks" class="admin-subtab-btn px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center gap-2 whitespace-nowrap">
             <i class="fa-solid fa-book-bookmark"></i> Handbooks & Guides
         </button>
-      
-        <!-- TAB BARU: AUDIT KPI SUBMISSIONS -->
         <button onclick="switchAdminSubTab('kpi-audit')" id="subtab-btn-kpi-audit" class="admin-subtab-btn px-4 py-2 text-xs font-bold rounded-lg text-slate-600 hover:bg-slate-100 transition flex items-center gap-2 whitespace-nowrap relative">
             <i class="fa-solid fa-chart-line"></i> Audit KPI
             <span id="kpiNotificationBadge" class="hidden px-2 py-0.5 text-[10px] font-extrabold bg-emerald-600 text-white rounded-full">0 New</span>
@@ -37,7 +38,116 @@
         </button>
     </div>
 
-    <!-- CONTAINER SUB-TAB AUDIT KPI -->
+    <!-- 1. TAB ROSTER MANAGEMENT -->
+    <div id="admin-subtab-roster" class="admin-subtab-content space-y-4">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between">
+                <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-sitemap text-jci-blue"></i> National Chapter Roster Management
+                </h4>
+                <button onclick="openAddChapterModal()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition flex items-center space-x-1.5 shadow-xs cursor-pointer">
+                    <i class="fa-solid fa-plus"></i><span>Add Chapter</span>
+                </button>
+            </div>
+            <div id="evaluatorChapterList" class="w-full"></div>
+        </div>
+    </div>
+
+    <!-- 2. TAB STANDARDS MANAGEMENT -->
+    <div id="admin-subtab-standards" class="admin-subtab-content space-y-4 hidden">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-list-check text-jci-blue"></i> National Standards & Categories Management
+                </h4>
+                <button onclick="openStandardModalForAdd()" class="px-3 py-1.5 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg text-xs transition flex items-center space-x-1 cursor-pointer">
+                    <i class="fa-solid fa-plus"></i><span>Add New Standard</span>
+                </button>
+            </div>
+            <div id="evaluatorStandardsList" class="space-y-6"></div>
+        </div>
+    </div>
+
+    <!-- 3. TAB EDIT FORM KPI TEMPLATE -->
+    <div id="admin-subtab-kpi-template" class="admin-subtab-content space-y-4 hidden">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <div>
+                    <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                        <i class="fa-solid fa-sliders text-jci-blue"></i> Konfigurasi Form Template KPI
+                    </h4>
+                    <p class="text-xs text-slate-500 mt-0.5">Kelola instruksi kriteria dan bobot poin maksimal untuk penilaian KPI Self-Assessment Chapter.</p>
+                </div>
+                <!-- TOMBOL TAMBAH FIELD KRITERIA BARU -->
+                <button onclick="openAddKpiFieldModal()" class="px-3.5 py-1.5 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg text-xs transition flex items-center space-x-1.5 cursor-pointer shadow-xs">
+                    <i class="fa-solid fa-plus"></i><span>Add New KPI Field</span>
+                </button>
+            </div>
+            <div id="evaluatorKpiTemplateList" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- MODAL ADD / EDIT FIELD TEMPLATE KPI -->
+    <div id="editKpiFieldModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-100 space-y-4">
+            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-pen-to-square text-jci-blue"></i> <span id="kpiFieldModalTitle">Edit KPI Template Field</span>
+                </h3>
+                <button onclick="closeEditKpiFieldModal()" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+
+            <form id="editKpiFieldForm" onsubmit="handleSaveKpiFieldSubmit(event)" class="space-y-3 text-xs">
+                <input type="hidden" id="mKpiFieldMode" value="edit">
+
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Field Unique Key <span class="text-rose-500">*</span></label>
+                    <input type="text" id="mKpiFieldKey" required placeholder="e.g. lbod_status, poa_pct" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-mono font-bold text-slate-800">
+                    <p class="text-[10px] text-slate-400 mt-0.5">Gunakan huruf kecil tanpa spasi (gunakan underscore `_`).</p>
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Field Label / Kriteria <span class="text-rose-500">*</span></label>
+                    <input type="text" id="mKpiFieldLabel" required placeholder="e.g. Update Data LBOD 2026" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-bold text-slate-800">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Kategori Aspect KPI <span class="text-rose-500">*</span></label>
+                    <input type="text" id="mKpiFieldCategory" required placeholder="e.g. 1. Membership, 2. Legality" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-medium text-slate-700">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Bobot Maksimal (Points) <span class="text-rose-500">*</span></label>
+                    <input type="number" id="mKpiFieldMaxPoints" required min="0" placeholder="25" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-bold text-emerald-700">
+                </div>
+                <div>
+                    <label class="block font-bold text-slate-700 mb-1">Deskripsi & Petunjuk Pengisian</label>
+                    <textarea id="mKpiFieldDesc" rows="3" placeholder="Instruksi detail untuk chapter..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-medium text-slate-700"></textarea>
+                </div>
+
+                <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+                    <button type="button" onclick="closeEditKpiFieldModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition cursor-pointer">Cancel</button>
+                    <button type="submit" class="px-4 py-2 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg shadow-xs transition cursor-pointer">Save Field</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 4. TAB HANDBOOK MANAGEMENT -->
+    <div id="admin-subtab-handbooks" class="admin-subtab-content space-y-4 hidden">
+        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
+            <div class="flex items-center justify-between border-b pb-3">
+                <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                    <i class="fa-solid fa-book-bookmark text-jci-blue"></i> Handbook & Reference Document Management
+                </h4>
+                <button onclick="openAddHandbookModal()" class="px-3.5 py-1.5 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg text-xs transition flex items-center space-x-1.5 shadow-xs cursor-pointer">
+                    <i class="fa-solid fa-plus"></i><span>Add New Reference</span>
+                </button>
+            </div>
+            <div id="evaluatorHandbookList" class="space-y-3"></div>
+        </div>
+    </div>
+
+    <!-- 5. TAB AUDIT KPI SUBMISSIONS -->
     <div id="admin-subtab-kpi-audit" class="admin-subtab-content space-y-4 hidden">
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
             <div class="flex items-center justify-between border-b pb-3">
@@ -46,122 +156,11 @@
                 </h4>
                 <span class="text-xs text-slate-500 font-medium">Evaluator Management Desk</span>
             </div>
-
             <div id="evaluatorKpiSubmissionsList" class="space-y-3 text-xs"></div>
         </div>
     </div>
-    <!-- 5. TAB HANDBOOK MANAGEMENT -->
-    <div id="admin-subtab-handbooks" class="admin-subtab-content space-y-4 hidden">
-      <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <div class="flex items-center justify-between border-b pb-3">
-          <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-            <i class="fa-solid fa-book-bookmark text-jci-blue"></i> Handbook & Reference Document Management
-          </h4>
-          <button onclick="openAddHandbookModal()" class="px-3.5 py-1.5 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg text-xs transition flex items-center space-x-1.5 shadow-xs">
-            <i class="fa-solid fa-plus"></i><span>Add New Reference</span>
-          </button>
-        </div>
 
-        <div id="evaluatorHandbookList" class="space-y-3"></div>
-      </div>
-    </div>
-
-    <!-- MODAL ADD HANDBOOK REFERENCE -->
-    <div id="addHandbookModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 hidden">
-        <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-100 space-y-4">
-            <div class="flex items-center justify-between border-b border-slate-100 pb-3">
-                <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-file-circle-plus text-jci-blue"></i> Add Handbook / Reference Document
-                </h3>
-                <button onclick="closeAddHandbookModal()" class="text-slate-400 hover:text-slate-600 transition">
-                    <i class="fa-solid fa-xmark text-lg"></i>
-                </button>
-            </div>
-
-            <form id="addHandbookForm" onsubmit="handleAddHandbookSubmit(event)" class="space-y-3 text-xs">
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Document Title <span class="text-rose-500">*</span></label>
-                    <input type="text" id="mDocTitle" required placeholder="e.g. 2026 Star Excellence Handbook V1" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium">
-                </div>
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Category</label>
-                    <select id="mDocCategory" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium">
-                        <option value="Handbook">Handbook / Guidelines</option>
-                        <option value="Template">Official Template / Form</option>
-                        <option value="Policy">Policy & Circular</option>
-                    </select>
-                </div>
-
-                <!-- INPUT UPLOAD FILE (BARU) -->
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Upload Document File (.pdf, .doc, .docx, .zip)</label>
-                    <input type="file" id="mDocFile" accept=".pdf,.doc,.docx,.zip,.rar" class="w-full text-slate-600 border border-slate-200 bg-slate-50 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium text-xs">
-                </div>
-
-                <div class="relative flex py-1 items-center">
-                    <div class="flex-grow border-t border-slate-200"></div>
-                    <span class="flex-shrink mx-2 text-[10px] font-bold text-slate-400 uppercase">OR</span>
-                    <div class="flex-grow border-t border-slate-200"></div>
-                </div>
-
-                <!-- FILE URL / DRIVE LINK (OPSIONAL) -->
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">File URL / External Drive Link <span class="text-slate-400 font-normal">(Optional)</span></label>
-                    <input type="url" id="mDocUrl" placeholder="https://drive.google.com/..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium">
-                </div>
-
-                <div>
-                    <label class="block font-bold text-slate-700 mb-1">Description</label>
-                    <textarea id="mDocDesc" rows="2" placeholder="Brief explanation about this reference document..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium"></textarea>
-                </div>
-
-                <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                    <button type="button" onclick="closeAddHandbookModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition">
-                        Cancel
-                    </button>
-                    <button type="submit" class="px-4 py-2 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg shadow-xs transition">
-                        Save Document
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
-    <!-- 1. TAB ROSTER MANAGEMENT -->
-    <div id="admin-subtab-roster" class="admin-subtab-content space-y-4">
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <div class="flex items-center justify-between">
-                <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-sitemap text-jci-blue"></i> National Chapter Roster Management
-                </h4>
-
-                <!-- TOMBOL BUKA MODAL ADD CHAPTER -->
-                <button onclick="openAddChapterModal()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition flex items-center space-x-1.5 shadow-xs">
-                    <i class="fa-solid fa-plus"></i><span>Add Chapter</span>
-                </button>
-            </div>
-
-            <!-- CONTAINER TABEL ROSTER -->
-            <div id="evaluatorChapterList" class="w-full"></div>
-        </div>
-    </div>
-
-    <!-- 2. TAB STANDARDS MANAGEMENT (GROUPED BY CATEGORY) -->
-    <div id="admin-subtab-standards" class="admin-subtab-content space-y-4 hidden">
-        <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <div class="flex items-center justify-between border-b pb-3">
-                <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
-                    <i class="fa-solid fa-list-check text-jci-blue"></i> National Standards & Categories Management
-                </h4>
-                <button onclick="openStandardModalForAdd()" class="px-3 py-1.5 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg text-xs transition flex items-center space-x-1">
-                    <i class="fa-solid fa-plus"></i><span>Add New Standard</span>
-                </button>
-            </div>
-            <div id="evaluatorStandardsList" class="space-y-6"></div>
-        </div>
-    </div>
-
-    <!-- 3. TAB PENDING USERS -->
+    <!-- 6. TAB PENDING USERS -->
     <div id="admin-subtab-pending-users" class="admin-subtab-content space-y-4 hidden">
         <div class="bg-white p-5 rounded-xl border border-amber-200 shadow-sm space-y-3">
             <h4 class="font-bold text-slate-800 text-xs flex items-center gap-2">
@@ -171,7 +170,7 @@
         </div>
     </div>
 
-    <!-- 4. TAB AUDIT SUBMISSIONS (WITH FILTER & CATEGORIES) -->
+    <!-- 7. TAB AUDIT SUBMISSIONS (STANDARDS) -->
     <div id="admin-subtab-audit" class="admin-subtab-content space-y-4 hidden">
         <div class="bg-white p-3.5 rounded-xl border border-slate-200 flex items-center justify-between text-xs">
             <div class="flex items-center space-x-3">
@@ -181,21 +180,20 @@
             <span class="text-slate-500 font-medium" id="evalAuditSubtitle">Showing submissions</span>
         </div>
 
-        <!-- AUDIT STATUS FILTER TABS -->
         <div class="flex items-center space-x-2 bg-slate-100 p-1 rounded-xl w-max border border-slate-200 text-xs">
-            <button onclick="filterAuditStatus('all')" id="audit-filter-all" class="audit-filter-btn px-3 py-1.5 font-bold rounded-lg bg-white shadow-xs text-slate-800">
+            <button onclick="filterAuditStatus('all')" id="audit-filter-all" class="audit-filter-btn px-3 py-1.5 font-bold rounded-lg bg-white shadow-xs text-slate-800 cursor-pointer">
                 All
             </button>
-            <button onclick="filterAuditStatus('pending')" id="audit-filter-pending" class="audit-filter-btn px-3 py-1.5 font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+            <button onclick="filterAuditStatus('pending')" id="audit-filter-pending" class="audit-filter-btn px-3 py-1.5 font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer">
                 Pending Review <span id="auditCountPending" class="bg-amber-500 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
             </button>
-            <button onclick="filterAuditStatus('approved')" id="audit-filter-approved" class="audit-filter-btn px-3 py-1.5 font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+            <button onclick="filterAuditStatus('approved')" id="audit-filter-approved" class="audit-filter-btn px-3 py-1.5 font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer">
                 Approved <span id="auditCountApproved" class="bg-emerald-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
             </button>
-            <button onclick="filterAuditStatus('revision')" id="audit-filter-revision" class="audit-filter-btn px-3 py-1.5 font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+            <button onclick="filterAuditStatus('revision')" id="audit-filter-revision" class="audit-filter-btn px-3 py-1.5 font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer">
                 Revision Requested <span id="auditCountRevision" class="bg-amber-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
             </button>
-            <button onclick="filterAuditStatus('rejected')" id="audit-filter-rejected" class="audit-filter-btn px-3 py-1.5 font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+            <button onclick="filterAuditStatus('rejected')" id="audit-filter-rejected" class="audit-filter-btn px-3 py-1.5 font-bold rounded-lg text-slate-600 hover:text-slate-900 flex items-center gap-1.5 cursor-pointer">
                 Rejected <span id="auditCountRejected" class="bg-rose-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">0</span>
             </button>
         </div>
@@ -204,6 +202,10 @@
     </div>
 </div>
 
+<!-- ========================================== -->
+<!-- MODALS SECTION                             -->
+<!-- ========================================== -->
+
 <!-- MODAL ADD NEW CHAPTER -->
 <div id="addChapterModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 hidden">
     <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-100 space-y-4">
@@ -211,7 +213,7 @@
             <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
                 <i class="fa-solid fa-square-plus text-emerald-600"></i> Add New National Chapter
             </h3>
-            <button onclick="closeAddChapterModal()" class="text-slate-400 hover:text-slate-600 transition">
+            <button onclick="closeAddChapterModal()" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
@@ -227,11 +229,148 @@
             </div>
 
             <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
-                <button type="button" onclick="closeAddChapterModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition">
+                <button type="button" onclick="closeAddChapterModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition cursor-pointer">
                     Cancel
                 </button>
-                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-xs transition">
+                <button type="submit" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-xs transition cursor-pointer">
                     Save Chapter
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL EDIT CHAPTER (DENGAN INPUT EMAIL PIC) -->
+<div id="editChapterModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-100 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-jci-blue"></i> Edit Chapter Information
+            </h3>
+            <button onclick="closeEditChapterModal()" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form id="editChapterForm" onsubmit="handleEditChapterFormSubmit(event)" class="space-y-3 text-xs">
+            <input type="hidden" id="mEditChapterOldName">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Chapter Name <span class="text-rose-500">*</span></label>
+                <input type="text" id="mEditChapterName" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue font-bold">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Assigned NVP Name</label>
+                <input type="text" id="mEditNvpName" placeholder="e.g. John Doe" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Email PIC Chapter</label>
+                <input type="email" id="mEditPicEmail" placeholder="pic.chapter@jci.or.id" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium">
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeEditChapterModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg shadow-xs transition cursor-pointer">
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL EDIT FIELD TEMPLATE KPI -->
+<div id="editKpiFieldModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-100 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-jci-blue"></i> Edit KPI Template Field
+            </h3>
+            <button onclick="closeEditKpiFieldModal()" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form id="editKpiFieldForm" onsubmit="handleSaveKpiFieldSubmit(event)" class="space-y-3 text-xs">
+            <input type="hidden" id="mKpiFieldKey">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Field Label / Kriteria</label>
+                <input type="text" id="mKpiFieldLabel" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-bold text-slate-800">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Kategori KPI</label>
+                <input type="text" id="mKpiFieldCategory" required class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-medium text-slate-700">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Bobot Maksimal (Points)</label>
+                <input type="number" id="mKpiFieldMaxPoints" required min="0" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-bold text-emerald-700">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Deskripsi & Petunjuk Pengisian</label>
+                <textarea id="mKpiFieldDesc" rows="3" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 font-medium text-slate-700"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeEditKpiFieldModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition cursor-pointer">Cancel</button>
+                <button type="submit" class="px-4 py-2 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg shadow-xs transition cursor-pointer">Save Field</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- MODAL ADD HANDBOOK REFERENCE -->
+<div id="addHandbookModal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 hidden">
+    <div class="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl border border-slate-100 space-y-4">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <h3 class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <i class="fa-solid fa-file-circle-plus text-jci-blue"></i> Add Handbook / Reference Document
+            </h3>
+            <button onclick="closeAddHandbookModal()" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form id="addHandbookForm" onsubmit="handleAddHandbookSubmit(event)" class="space-y-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Document Title <span class="text-rose-500">*</span></label>
+                <input type="text" id="mDocTitle" required placeholder="e.g. 2026 Star Excellence Handbook V1" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium">
+            </div>
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Category</label>
+                <select id="mDocCategory" class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium">
+                    <option value="Handbook">Handbook / Guidelines</option>
+                    <option value="Template">Official Template / Form</option>
+                    <option value="Policy">Policy & Circular</option>
+                </select>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Upload Document File (.pdf, .doc, .docx, .zip)</label>
+                <input type="file" id="mDocFile" accept=".pdf,.doc,.docx,.zip,.rar" class="w-full text-slate-600 border border-slate-200 bg-slate-50 rounded-lg px-2.5 py-1.5 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium text-xs">
+            </div>
+
+            <div class="relative flex py-1 items-center">
+                <div class="flex-grow border-t border-slate-200"></div>
+                <span class="flex-shrink mx-2 text-[10px] font-bold text-slate-400 uppercase">OR</span>
+                <div class="flex-grow border-t border-slate-200"></div>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">File URL / External Drive Link <span class="text-slate-400 font-normal">(Optional)</span></label>
+                <input type="url" id="mDocUrl" placeholder="https://drive.google.com/..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 mb-1">Description</label>
+                <textarea id="mDocDesc" rows="2" placeholder="Brief explanation about this reference document..." class="w-full bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue font-medium"></textarea>
+            </div>
+
+            <div class="flex items-center justify-end space-x-2 pt-3 border-t border-slate-100">
+                <button type="button" onclick="closeAddHandbookModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition cursor-pointer">
+                    Cancel
+                </button>
+                <button type="submit" class="px-4 py-2 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg shadow-xs transition cursor-pointer">
+                    Save Document
                 </button>
             </div>
         </form>
@@ -248,7 +387,7 @@
                 </h3>
                 <p class="text-xs text-slate-500" id="kpiAuditChapterSubtitle">Chapter: -</p>
             </div>
-            <button type="button" onclick="closeKpiAuditModal()" class="text-slate-400 hover:text-slate-600 transition">
+            <button type="button" onclick="closeKpiAuditModal()" class="text-slate-400 hover:text-slate-600 transition cursor-pointer">
                 <i class="fa-solid fa-xmark text-lg"></i>
             </button>
         </div>
@@ -257,7 +396,7 @@
             <input type="hidden" id="kpiAuditSubId">
             
             <div id="kpiAuditSummaryContainer" class="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-2 max-h-60 overflow-y-auto">
-                <!-- Data 10 aspek dirender di sini -->
+                <!-- Data breakdown kriteria KPI dirender secara dinamis -->
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 border-t pt-3">
@@ -282,8 +421,8 @@
             </div>
 
             <div class="flex items-center justify-end space-x-2 pt-3 border-t">
-                <button type="button" onclick="closeKpiAuditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition">Cancel</button>
-                <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-xs transition">Simpan Hasil Penilaian</button>
+                <button type="button" onclick="closeKpiAuditModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold rounded-lg transition cursor-pointer">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg shadow-xs transition cursor-pointer">Simpan Hasil Penilaian</button>
             </div>
         </form>
     </div>

@@ -1,0 +1,467 @@
+[
+  {
+    "id": "tab_membership",
+    "title": "01. Membership Management",
+    "order": 1,
+    "fields": [
+      {
+        "key": "lbod_update_status",
+        "label": "1) Mengupdate data LBOD 2026 dan member (nama dan foto) di jci.cc",
+        "type": "select",
+        "max_score": 25,
+        "description": "Checklist sesuai tanggal pelaksanaannya",
+        "options": [
+          {
+            "label": "Sebelum 31 Desember (23:59 WIB) tahun sebelumnya",
+            "score": 25
+          },
+          {
+            "label": "31 Desember - 31 Januari tahun berjalan",
+            "score": 5
+          },
+          {
+            "label": "Setelah 31 Januari / Tidak update tahun berjalan",
+            "score": -10
+          }
+        ]
+      },
+      {
+        "key": "member_declaration",
+        "label": "2) Member Declaration ke National JCI Indonesia",
+        "type": "select",
+        "max_score": 25,
+        "description": "Checklist sesuai tanggal pelaksanaannya",
+        "options": [
+          {
+            "label": "Sebelum 4 Januari (23:59 WIB) tahun berjalan",
+            "score": 25
+          },
+          {
+            "label": "Setelah 4 Januari tahun berjalan",
+            "score": 5
+          },
+          {
+            "label": "Tidak melakukan declare member",
+            "score": -30
+          }
+        ]
+      },
+      {
+        "key": "declared_member_count",
+        "label": "Jumlah Declare Member (Orang)",
+        "type": "number",
+        "max_score": 0,
+        "description": "Sebutkan jumlah total anggota terdaftar resmi"
+      },
+      {
+        "key": "dues_payment_status",
+        "label": "3) Dues Payment ke National JCI Indonesia",
+        "type": "select",
+        "max_score": 30,
+        "description": "Checklist sesuai tanggal pelaksanaannya",
+        "options": [
+          {
+            "label": "Lunas sebelum 1 Maret tahun berjalan",
+            "score": 30
+          },
+          {
+            "label": "Lunas 1 Maret - 16 Maret tahun berjalan",
+            "score": 25
+          },
+          {
+            "label": "Lunas 16 Maret - 31 Maret tahun berjalan",
+            "score": 5
+          },
+          {
+            "label": "Tidak melunasi pembayaran dues",
+            "score": -30
+          }
+        ]
+      },
+      {
+        "key": "chapter_database_alumni",
+        "label": "4a) Memiliki database member dan alumni chapter",
+        "type": "checkbox",
+        "max_score": 15,
+        "score": 15,
+        "description": "Sertakan bukti/tautan database di kolom penjelasan"
+      },
+      {
+        "key": "new_members_count",
+        "label": "4b) Jumlah member baru tahun berjalan",
+        "type": "number",
+        "max_score": 0,
+        "description": "Sebutkan jumlah anggota baru"
+      },
+      {
+        "key": "active_member_growth",
+        "label": "4d) Pertumbuhan member aktif hingga sebelum Local Convention 2026",
+        "type": "select",
+        "max_score": 15,
+        "options": [
+          {
+            "label": "Bertambah",
+            "score": 15
+          },
+          {
+            "label": "Stagnant",
+            "score": 5
+          },
+          {
+            "label": "Berkurang",
+            "score": 0
+          }
+        ]
+      },
+      {
+        "key": "photogroup_member",
+        "label": "4e) Memiliki photogroup pengurus dan/atau member",
+        "type": "checkbox",
+        "max_score": 10,
+        "score": 10,
+        "description": "Sertakan bukti/tautan foto di kolom penjelasan"
+      },
+      {
+        "key": "senator_plp_pnp_db",
+        "label": "4f) Memiliki database Senator, PLP, dan PNP dari Chapter",
+        "type": "checkbox",
+        "max_score": 10,
+        "score": 10,
+        "description": "Sertakan bukti/tautan database"
+      },
+      {
+        "key": "new_member_orientation",
+        "label": "5a) Melakukan Introduction/New Member Orientation",
+        "type": "checkbox",
+        "max_score": 10,
+        "score": 10,
+        "description": "Sertakan foto bukti kegiatan"
+      },
+      {
+        "key": "new_member_installment",
+        "label": "5c) Melakukan Installment/pelantikan new member",
+        "type": "checkbox",
+        "max_score": 5,
+        "score": 5,
+        "description": "Sertakan foto bukti kegiatan"
+      },
+      {
+        "key": "lbod_vp_evp_election_status",
+        "label": "7c) Pemilihan VP dan/atau EVP 2026",
+        "type": "select",
+        "max_score": 0,
+        "options": [
+          {
+            "label": "Elected (Dipilih)",
+            "score": 0
+          },
+          {
+            "label": "Appointed (Ditunjuk)",
+            "score": -30
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tab_legality",
+    "title": "02. Legality",
+    "order": 2,
+    "fields": [
+      {
+        "key": "legal_ad_art",
+        "label": "a) Memiliki dan mengirimkan AD ART ke National JCI Indonesia",
+        "type": "checkbox",
+        "max_score": 25,
+        "score": 25,
+        "description": "Submit copy dokumen ke folder KPI"
+      },
+      {
+        "key": "legal_notaris_akta",
+        "label": "b) Memiliki dan mengirimkan Akta Notaris perubahan pengurus tahun berjalan",
+        "type": "checkbox",
+        "max_score": 10,
+        "score": 10,
+        "description": "Submit copy dokumen ke folder KPI"
+      },
+      {
+        "key": "legal_sk_kemenkumham",
+        "label": "c) Memiliki dan mengirimkan SK Kemenkumham",
+        "type": "checkbox",
+        "max_score": 25,
+        "score": 25,
+        "description": "Submit copy dokumen ke folder KPI"
+      },
+      {
+        "key": "legal_npwp_chapter",
+        "label": "d) Memiliki dan mengirimkan NPWP Chapter",
+        "type": "checkbox",
+        "max_score": 10,
+        "score": 10,
+        "description": "Submit copy dokumen ke folder KPI"
+      },
+      {
+        "key": "legal_bank_account",
+        "label": "e) Memiliki Rekening Bank atas nama Chapter",
+        "type": "checkbox",
+        "max_score": 10,
+        "score": 10,
+        "description": "Submit copy dokumen ke folder KPI"
+      },
+      {
+        "key": "legal_tax_report",
+        "label": "f) Mengirimkan Laporan Pajak tahun berjalan",
+        "type": "checkbox",
+        "max_score": 25,
+        "score": 25,
+        "description": "Submit copy dokumen ke folder KPI"
+      },
+      {
+        "key": "legal_financial_report",
+        "label": "g) Mengirimkan Laporan Keuangan tahun berjalan",
+        "type": "checkbox",
+        "max_score": 25,
+        "score": 25,
+        "description": "Submit copy dokumen ke folder KPI"
+      },
+      {
+        "key": "legal_third_party_audit",
+        "label": "h) Apakah Laporan Keuangan diaudit pihak ketiga?",
+        "type": "select",
+        "max_score": 30,
+        "description": "Sebutkan nama auditor dan hasil audit",
+        "options": [
+          {
+            "label": "Ya (Diaudit Pihak Ketiga)",
+            "score": 30
+          },
+          {
+            "label": "Tidak Diaudit",
+            "score": 0
+          }
+        ]
+      }
+    ]
+  },
+  {
+    "id": "tab_poa_strategic",
+    "title": "03. PoA & Strategic Plan",
+    "order": 3,
+    "fields": [
+      {
+        "key": "poa_creation_timing",
+        "label": "1) Membuat Plan of Action (Bagian dari Standards 3)",
+        "type": "select",
+        "max_score": 25,
+        "options": [
+          {
+            "label": "Sebelum 31 Desember 2025 (23:59 WIB)",
+            "score": 25
+          },
+          {
+            "label": "Setelah 31 Desember 2025 (23:59 WIB)",
+            "score": 15
+          },
+          {
+            "label": "Tidak membuat Plan of Action",
+            "score": -30
+          }
+        ]
+      },
+      {
+        "key": "poa_execution_percentage",
+        "label": "1d) Persentase Plan of Action yang terlaksana",
+        "type": "select",
+        "max_score": 25,
+        "options": [
+          {
+            "label": "81% - 100%",
+            "score": 25
+          },
+          {
+            "label": "61% - 80%",
+            "score": 20
+          },
+          {
+            "label": "41% - 60%",
+            "score": 15
+          },
+          {
+            "label": "21% - 40%",
+            "score": 10
+          },
+          {
+            "label": "0% - 20%",
+            "score": 5
+          }
+        ]
+      },
+      {
+        "key": "strategic_plan_sustainable",
+        "label": "2) Memiliki Strategic Plan program berkelanjutan (min 3 tahun)",
+        "type": "checkbox",
+        "max_score": 20,
+        "score": 20,
+        "description": "Sertakan tautan/berkas dokumen Strategic Plan"
+      }
+    ]
+  },
+  {
+    "id": "tab_impact_projects",
+    "title": "04. Impact & Framework",
+    "order": 4,
+    "fields": [
+      {
+        "key": "impact_project_sdg",
+        "label": "1) Menyelenggarakan proyek yang berorientasi pada SDGs",
+        "type": "checkbox",
+        "max_score": 50,
+        "score": 50,
+        "description": "Upload Ringkasan Laporan Kegiatan & Tautan Bukti"
+      },
+      {
+        "key": "jci_action_framework_used",
+        "label": "2) Mengimplementasikan JCI Action Framework pada proyek utama",
+        "type": "checkbox",
+        "max_score": 30,
+        "score": 30,
+        "description": "Sertakan dokumen tahapan Analysis, Solution, Partner, Execute, Evaluate"
+      }
+    ]
+  },
+  {
+    "id": "tab_skills_training",
+    "title": "05. Skill Development",
+    "order": 5,
+    "fields": [
+      {
+        "key": "official_jci_training_hosted",
+        "label": "1) Menyelenggarakan Pelatihan Resmi (Official JCI Training)",
+        "type": "checkbox",
+        "max_score": 40,
+        "score": 40,
+        "description": "Modul: Discover, Explore, Admin, atau Trainer"
+      },
+      {
+        "key": "certified_trainers_count",
+        "label": "2) Jumlah Certified Trainer aktif di Chapter",
+        "type": "number",
+        "max_score": 20,
+        "description": "Sebutkan jumlah trainer tersertifikasi"
+      }
+    ]
+  },
+  {
+    "id": "tab_national_events",
+    "title": "06. National Events",
+    "order": 6,
+    "fields": [
+      {
+        "key": "national_convention_delegates",
+        "label": "1) Keikutsertaan Delegasi pada National Convention",
+        "type": "checkbox",
+        "max_score": 50,
+        "score": 50,
+        "description": "Sertakan bukti pendaftaran & foto kontingen"
+      },
+      {
+        "key": "jci_academy_delegates",
+        "label": "2) Mengirimkan peserta ke Indonesia Academy / Leadership Summit",
+        "type": "checkbox",
+        "max_score": 30,
+        "score": 30,
+        "description": "Sertakan sertifikat / bukti keikutsertaan"
+      }
+    ]
+  },
+  {
+    "id": "tab_international_events",
+    "title": "07. International Events",
+    "order": 7,
+    "fields": [
+      {
+        "key": "aspac_delegates_count",
+        "label": "1) Mengirimkan delegasi resmi ke ASPAC (Asia-Pacific Conference)",
+        "type": "checkbox",
+        "max_score": 50,
+        "score": 50,
+        "description": "Sertakan name tag / bukti registrasi"
+      },
+      {
+        "key": "world_congress_delegates",
+        "label": "2) Mengirimkan delegasi resmi ke World Congress",
+        "type": "checkbox",
+        "max_score": 50,
+        "score": 50,
+        "description": "Sertakan name tag / bukti registrasi"
+      }
+    ]
+  },
+  {
+    "id": "tab_branding_publication",
+    "title": "08. Publication & Branding",
+    "order": 8,
+    "fields": [
+      {
+        "key": "active_social_media",
+        "label": "1) Pengelolaan Media Sosial Resmi Chapter (Aktif dan Rutin Update)",
+        "type": "checkbox",
+        "max_score": 30,
+        "score": 30,
+        "description": "Sertakan link akun Instagram/YouTube/TikTok"
+      },
+      {
+        "key": "media_coverage_press",
+        "label": "2) Publikasi Kegiatan di Media Massa / Press Release",
+        "type": "checkbox",
+        "max_score": 40,
+        "score": 40,
+        "description": "Sertakan tautan berita/kliping media"
+      }
+    ]
+  },
+  {
+    "id": "tab_awarding_recognition",
+    "title": "09. Awarding & Recognition",
+    "order": 9,
+    "fields": [
+      {
+        "key": "local_awarding_program",
+        "label": "1) Menyelenggarakan Program Apresiasi / Awarding Tingkat Lokal",
+        "type": "checkbox",
+        "max_score": 30,
+        "score": 30,
+        "description": "Sertakan bukti dokumen pelaksanaan"
+      },
+      {
+        "key": "aspac_national_award_submission",
+        "label": "2) Mengajukan Nominasi Award ke National / ASPAC",
+        "type": "checkbox",
+        "max_score": 40,
+        "score": 40,
+        "description": "Sertakan bukti pengajuan berkas e-Awards"
+      }
+    ]
+  },
+  {
+    "id": "tab_misc_feedback",
+    "title": "10. Miscellaneous & Feedback",
+    "order": 10,
+    "fields": [
+      {
+        "key": "nvp_performance_rating",
+        "label": "1) Pengisian Evaluasi Kinerja NVP (Umpan Balik Pengurus)",
+        "type": "checkbox",
+        "max_score": 20,
+        "score": 20,
+        "description": "Diisi oleh Local President / Sekretaris General"
+      }
+    ]
+  },
+  {
+    "id": "tes",
+    "title": "tes",
+    "order": 11,
+    "fields": []
+  }
+]

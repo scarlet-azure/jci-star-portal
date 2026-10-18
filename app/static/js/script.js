@@ -3,13 +3,14 @@ let isLoggedIn = false;
 let currentRole = 'CHAPTER_PIC';
 let currentChapter = 'JCI Jakarta';
 let currentCategoryFilter = 'ALL';
+let currentDeadlineFilter = null; // Menyimpan filter tanggal dari kalender
 let currentUserFullName = '';
 let currentUserEmail = '';
 let standardsData = [];
 let chapterSubmissions = {};
 let loadedChaptersList = [];
 let radarChartInstance = null;
-let calCurrentDate = new Date(2026, 8, 1);
+let calCurrentDate = new Date(); // Otomatis ke tanggal & bulan hari ini
 
 function checkAuthSession() {
     loadChapters();
@@ -584,7 +585,7 @@ function renderDeadlineCalendarWidget() {
 
     const deadlineMap = {};
     standardsData.forEach(std => {
-        const dStr = std.deadline || '2026-12-31';
+        const dStr = std.deadline ? std.deadline.substring(0, 10) : '2026-12-31';
         if (!deadlineMap[dStr]) deadlineMap[dStr] = [];
         
         const sub = chapterSubmissions[std.id];
@@ -600,25 +601,35 @@ function renderDeadlineCalendarWidget() {
 
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+    const today = new Date();
 
     let gridHtml = '';
-    for (let i = 0; i < firstDay; i++) {
-        gridHtml += `<div class="p-1.5"></div>`;
+
+    // 1. Padding Hari Bulan Sebelumnya
+    for (let i = firstDay; i > 0; i--) {
+        const prevDay = prevMonthDays - i + 1;
+        gridHtml += `<div class="py-1.5 text-slate-300 font-medium cursor-not-allowed text-center">${prevDay}</div>`;
     }
 
+    // 2. Hari Bulan Aktif
     for (let day = 1; day <= daysInMonth; day++) {
         const dayFormatted = String(day).padStart(2, '0');
         const monthFormatted = String(month + 1).padStart(2, '0');
         const dateKey = `${year}-${monthFormatted}-${dayFormatted}`;
 
         const itemsOnDate = deadlineMap[dateKey] || [];
-        let dayBg = "hover:bg-slate-200 text-slate-700 font-medium cursor-pointer";
+        const isToday = day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
+
+        let dayBg = "hover:bg-slate-200 text-slate-700 font-medium cursor-pointer rounded-lg";
 
         if (itemsOnDate.length > 0) {
             const hasPending = itemsOnDate.some(item => !item.isApproved);
             dayBg = hasPending 
-                ? "bg-rose-500 text-white font-extrabold rounded-lg shadow-sm cursor-pointer hover:bg-rose-600" 
-                : "bg-emerald-500 text-white font-extrabold rounded-lg shadow-sm cursor-pointer hover:bg-emerald-600";
+                ? "bg-rose-500 text-white font-extrabold rounded-lg shadow-xs cursor-pointer hover:bg-rose-600" 
+                : "bg-emerald-500 text-white font-extrabold rounded-lg shadow-xs cursor-pointer hover:bg-emerald-600";
+        } else if (isToday) {
+            dayBg = "bg-jci-blue text-white font-black rounded-lg shadow-xs cursor-pointer hover:opacity-90";
         }
 
         let popupHtml = '';
@@ -633,24 +644,74 @@ function renderDeadlineCalendarWidget() {
             `).join('');
 
             popupHtml = `
-                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-64 p-3 bg-white border border-slate-200/90 rounded-2xl shadow-2xl text-left z-50 hidden group-hover:block pointer-events-none">
+                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-64 p-3 bg-white border border-slate-200/90 rounded-2xl shadow-2xl text-left z-50 hidden group-hover:block pointer-events-auto">
                     <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
                         <span><i class="fa-regular fa-calendar text-jci-blue mr-1"></i> ${day} ${monthNames[month]} ${year}</span>
                         <span class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">${itemsOnDate.length} Deadline</span>
                     </div>
-                    <div class="space-y-1 max-h-40 overflow-y-auto pr-1">${listItems}</div>
+                    <div class="space-y-1 max-h-40 overflow-y-auto pr-1 text-slate-800">${listItems}</div>
                 </div>
             `;
         }
 
         gridHtml += `
-            <div class="p-1.5 rounded-lg text-center ${dayBg} relative group transition">
+            <div onclick="onCalendarDateClick('${dateKey}')" class="py-1.5 rounded-lg text-center ${dayBg} relative group transition flex items-center justify-center">
                 ${day}
                 ${popupHtml}
             </div>
         `;
     }
+
+    // 3. Padding Hari Bulan Berikutnya
+    const totalRendered = firstDay + daysInMonth;
+    const nextDays = (42 - totalRendered) % 7;
+    for (let j = 1; j <= nextDays; j++) {
+        gridHtml += `<div class="py-1.5 text-slate-300 font-medium cursor-not-allowed text-center">${j}</div>`;
+    }
+
     gridContainer.innerHTML = gridHtml;
+}
+
+// Handler klik tanggal di kalender: otomatis pindah tab dan filter data
+function onCalendarDateClick(dateStr) {
+    currentDeadlineFilter = dateStr;
+    switchTab('standards');
+    renderCategoryPills();
+    renderStandardsList();
+    showDeadlineFilterBadge(dateStr);
+}
+
+function showDeadlineFilterBadge(dateStr) {
+    let container = document.getElementById('deadlineFilterBadgeContainer');
+    const standardsHeader = document.getElementById('standardsSectionsContainer');
+
+    if (!standardsHeader) return;
+
+    if (!container) {
+        container = document.createElement('div');
+        container.id = 'deadlineFilterBadgeContainer';
+        container.className = 'mb-4';
+        standardsHeader.parentNode.insertBefore(container, standardsHeader);
+    }
+
+    container.innerHTML = `
+        <div class="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-900 text-xs">
+            <div class="flex items-center gap-2 font-bold">
+                <i class="fa-solid fa-filter text-jci-blue"></i>
+                <span>Filtering Standards for Deadline: <strong class="text-jci-blue">${dateStr}</strong></span>
+            </div>
+            <button onclick="clearDeadlineFilter()" class="px-2.5 py-1 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-lg text-[11px] font-bold shadow-xs transition">
+                <i class="fa-solid fa-xmark mr-1 text-rose-500"></i> Clear Date Filter
+            </button>
+        </div>
+    `;
+}
+
+function clearDeadlineFilter() {
+    currentDeadlineFilter = null;
+    const container = document.getElementById('deadlineFilterBadgeContainer');
+    if (container) container.remove();
+    renderStandardsList();
 }
 
 function getDaysLeftText(deadlineStr) {
@@ -729,7 +790,6 @@ function renderRadarChart(totals) {
     if (!ctx) return;
     if (radarChartInstance) radarChartInstance.destroy();
 
-    // 1. Tentukan target maksimal poin untuk masing-masing kategori sesuai database/aturan program
     const categories = ['Efficiency', 'Network', 'Experience', 'Outreach', 'Impact'];
     const maxTargets = {
         Efficiency: 140, 
@@ -739,10 +799,8 @@ function renderRadarChart(totals) {
         Impact: 250
     };
 
-    // 2. Ambil nilai asli dari database (melalui objek totals)
     const rawScores = categories.map(cat => totals[cat] || 0);
 
-    // 3. Hitung persentase pencapaian (0 - 100%) secara otomatis per kategori
     const percentages = categories.map((cat, index) => {
         const score = rawScores[index];
         const max = maxTargets[cat];
@@ -769,14 +827,12 @@ function renderRadarChart(totals) {
             scales: {
                 r: {
                     min: 0,
-                    max: 100, // Skala seragam 0% sampai 100% untuk semua sudut
+                    max: 100,
                     beginAtZero: true,
                     angleLines: { color: '#e2e8f0' },
                     grid: { color: '#f1f5f9' },
                     pointLabels: { font: { size: 10, weight: 'bold' }, color: '#475569' },
-                    ticks: { 
-                        display:false,
-                    }
+                    ticks: { display: false }
                 }
             },
             plugins: { 
@@ -784,7 +840,6 @@ function renderRadarChart(totals) {
                 tooltip: {
                     callbacks: {
                         label: function(context) {
-                            // Menampilkan info skor asli dari database vs target maksimal saat kursor diarahkan
                             const cat = categories[context.dataIndex];
                             const currentScore = rawScores[context.dataIndex];
                             const maxScore = maxTargets[cat];
@@ -867,11 +922,17 @@ function renderStandardsList() {
     const query = searchInput ? searchInput.value.toLowerCase() : '';
 
     const filtered = standardsData.filter(std => {
+        const stdDeadline = std.deadline ? std.deadline.substring(0, 10) : '';
+        
         const matchesCat = (currentCategoryFilter === 'ALL') || 
             (std.star && std.star.toUpperCase() === currentCategoryFilter);
+            
         const matchesSearch = std.name.toLowerCase().includes(query) || 
             std.id.toLowerCase().includes(query);
-        return matchesCat && matchesSearch;
+            
+        const matchesDate = !currentDeadlineFilter || (stdDeadline === currentDeadlineFilter);
+
+        return matchesCat && matchesSearch && matchesDate;
     });
 
     const grouped = {};
@@ -880,6 +941,17 @@ function renderStandardsList() {
         if (!grouped[cat]) grouped[cat] = [];
         grouped[cat].push(std);
     });
+
+    if (Object.keys(grouped).length === 0) {
+        container.innerHTML = `
+            <div class="p-8 text-center bg-white rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                <i class="fa-solid fa-calendar-xmark text-slate-300 text-3xl"></i>
+                <p class="text-xs font-semibold text-slate-500">Tidak ada standar yang memiliki deadline pada tanggal ini (${currentDeadlineFilter || 'pilihan saat ini'}).</p>
+                ${currentDeadlineFilter ? `<button onclick="clearDeadlineFilter()" class="text-xs text-jci-blue font-bold hover:underline">Tampilkan Semua Standar</button>` : ''}
+            </div>
+        `;
+        return;
+    }
 
     container.innerHTML = Object.keys(grouped).map(cat => `
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden space-y-3 p-5">
@@ -922,19 +994,18 @@ function renderStandardsList() {
                             return `
                                 <tr class="hover:bg-slate-50 transition">
                                     <td class="py-3 px-3">
-                                        <div class="font-bold text-slate-900">${std.id}. ${std.name}</div>
-                                        <div class="text-[11px] text-slate-500 mt-0.5">${std.purpose || ''}</div>
-                                        ${sub.evaluator_notes ? `<div class="text-[10px] text-amber-700 bg-amber-50 p-1.5 rounded mt-1 border border-amber-200"><strong>Note:</strong> ${sub.evaluator_notes}</div>` : ''}
+                                        <div class="font-bold text-slate-900">${std.id}.${std.name}</div>
+                                        <div class="text-[11px] text-slate-500 mt-0.5">${std.purpose \vert{}\vert{} ''}</div>${sub.evaluator_notes ? `<div class="text-[10px] text-amber-700 bg-amber-50 p-1.5 rounded mt-1 border border-amber-200"><strong>Note:</strong> ${sub.evaluator_notes}</div>` : ''}
                                     </td>
                                     <td class="py-3 px-3">
-                                        <span class="text-[10px] font-extrabold text-jci-blue uppercase bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">${std.star}</span>
+                                        <span class="text-[10px] font-extrabold text-jci-blue uppercase bg-blue-50 px-2.5 py-1 rounded-md border border-blue-100">\${std.star}</span>
                                     </td>
-                                    <td class="py-3 px-3 text-[11px] font-medium text-slate-600">${std.deadline || '2026-12-31'}</td>
-                                    <td class="py-3 px-3 font-bold text-slate-700">${std.max_score} pts</td>
+                                    <td class="py-3 px-3 text-[11px] font-medium text-slate-600">\${std.deadline || '2026-12-31'}</td>
+                                    <td class="py-3 px-3 font-bold text-slate-700">\${std.max_score} pts</td>
                                     <td class="py-3 px-3 font-extrabold ${isApproved ? 'text-emerald-600' : 'text-slate-400'}">${earnedPts} pts</td>
-                                    <td class="py-3 px-3">${statusBadge}</td>
+                                    <td class="py-3 px-3">\${statusBadge}</td>
                                     <td class="py-3 px-3 text-center">
-                                        <button onclick="openSubmissionModal('${std.id}', '${std.name}', '${std.deadline || ''}')" class="px-3.5 py-1.5 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-xl shadow-xs text-xs transition">
+                                        <button onclick="openSubmissionModal('\${std.id}', '${std.name}', '${std.deadline || ''}')" class="px-3.5 py-1.5 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-xl shadow-xs text-xs transition">
                                             <i class="fa-solid fa-pen-to-square mr-1"></i> Edit
                                         </button>
                                     </td>
@@ -1042,8 +1113,8 @@ function renderEvaluatorPortal() {
             <div>
                 <h4 class="font-bold text-slate-900 text-sm">${sub.title}</h4>
                 <p class="text-xs text-slate-600 mt-1"><strong>Description:</strong> ${sub.description}</p>
-                ${(sub.url || sub.evidence_url) ? `<p class="text-xs text-blue-600 mt-1"><a href="${sub.url || sub.evidence_url}" target="_blank" class="hover:underline"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${sub.url || sub.evidence_url}</a></p>` : ''}
-                ${sub.evaluator_notes ? `<p class="text-xs text-amber-800 bg-amber-50 p-2 rounded mt-2 border border-amber-200"><strong>Evaluator Notes:</strong> ${sub.evaluator_notes}</p>` : ''}
+                ${(sub.url || sub.evidence_url) ? `<p class="text-xs text-blue-600 mt-1"><a href="\${sub.url || sub.evidence_url}" target="_blank" class="hover:underline"><i class="fa-solid fa-arrow-up-right-from-square"></i> \${sub.url || sub.evidence_url}</a></p>` : ''}
+                ${sub.evaluator_notes ? `<p class="text-xs text-amber-800 bg-amber-50 p-2 rounded mt-2 border border-amber-200"><strong>Evaluator Notes:</strong> \${sub.evaluator_notes}</p>` : ''}
             </div>
             <div class="flex items-center justify-between pt-2 border-t text-xs">
                 <span class="font-bold text-slate-700">Awarded Score: ${sub.score_earned || 0} pts</span>

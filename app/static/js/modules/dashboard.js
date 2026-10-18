@@ -1,9 +1,9 @@
 import { state } from './auth.js';
+import { renderDeadlineCalendarWidget, renderUpcomingDeadlines } from './calendar.js';
 
 let radarChartInstance = null;
-let calCurrentDate = new Date(2026, 8, 1);
 
-export function renderDashboard(data, allLeaderboardData = [], chapterSubmissions = {}) {
+export function renderDashboard(data, allLeaderboardData = [], chapterSubmissions = {}, standardsData = []) {
     const isAdmin = (state.currentRole === 'ADMIN' || state.currentRole === 'UserRole.ADMIN');
     const adminOverview = document.getElementById('adminNationalOverview');
     
@@ -37,14 +37,64 @@ export function renderDashboard(data, allLeaderboardData = [], chapterSubmission
     const bandEl = document.getElementById('dashOverallBand');
     if (bandEl) bandEl.textContent = data.efficiency_band || "Under Minimum Standard (<90 pts)";
 
-    const b = data.breakdown || data.scores || {};
-    const totals = {
-        Efficiency: b.Efficiency ?? b.efficiency ?? b.E ?? 0,
-        Network: b.Network ?? b.network ?? b.N ?? 0,
-        Experience: b.Experience ?? b.experience ?? b.Ex ?? 0,
-        Outreach: b.Outreach ?? b.outreach ?? b.O ?? 0,
-        Impact: b.Impact ?? b.impact ?? b.I ?? 0
+    // 1. HITUNG MAX SCORE DINAMIS PER KATEGORI DARI STANDARDS DATA
+    const dynamicMaxScores = {
+        Efficiency: 0,
+        Network: 0,
+        Experience: 0,
+        Outreach: 0,
+        Impact: 0
     };
+
+    if (Array.isArray(standardsData) && standardsData.length > 0) {
+        standardsData.forEach(std => {
+            let cat = std.star || std.star_category || 'EFFICIENCY';
+            if (typeof cat === 'object' && cat !== null) cat = cat.value || cat.name || 'EFFICIENCY';
+            cat = String(cat).toUpperCase();
+
+            const scoreVal = parseInt(std.max_score || std.weight || 10);
+
+            if (cat.includes('EFF') || cat === 'EFFICIENCY') dynamicMaxScores.Efficiency += scoreVal;
+            else if (cat.includes('NET') || cat === 'NETWORK') dynamicMaxScores.Network += scoreVal;
+            else if (cat.includes('EXP') || cat === 'EXPERIENCE') dynamicMaxScores.Experience += scoreVal;
+            else if (cat.includes('OUT') || cat === 'OUTREACH') dynamicMaxScores.Outreach += scoreVal;
+            else if (cat.includes('IMP') || cat === 'IMPACT') dynamicMaxScores.Impact += scoreVal;
+        });
+    }
+
+    // Fallback jika standardsData belum terload/kosong
+    if (dynamicMaxScores.Efficiency === 0) dynamicMaxScores.Efficiency = 140;
+    if (dynamicMaxScores.Network === 0) dynamicMaxScores.Network = 250;
+    if (dynamicMaxScores.Experience === 0) dynamicMaxScores.Experience = 250;
+    if (dynamicMaxScores.Outreach === 0) dynamicMaxScores.Outreach = 250;
+    if (dynamicMaxScores.Impact === 0) dynamicMaxScores.Impact = 250;
+
+    // 2. SKOR TERAKHIR CHAPTER
+    // 2. SKOR TERAKHIR CHAPTER (dengan Fallback Multi-Structure)
+    let b = data.breakdown || data.scores || data.scores_by_category || {};
+
+    // Jika data berupa JSON String dari DB (misal kolom 'form_data' / 'scores')
+    if (typeof b === 'string') {
+        try { b = JSON.parse(b); } catch (e) { b = {}; }
+    }
+
+    // Ekstraksi nilai dengan fallback aman
+    const totals = {
+        Efficiency: b.Efficiency ?? b.efficiency ?? b.EFFICIENCY ?? b.E ?? 0,
+        Network:    b.Network    ?? b.network    ?? b.NETWORK    ?? b.N ?? 0,
+        Experience: b.Experience ?? b.experience ?? b.EXPERIENCE ?? b.Ex ?? 0,
+        Outreach:   b.Outreach   ?? b.outreach   ?? b.OUTREACH   ?? b.O ?? 0,
+        Impact:     b.Impact     ?? b.impact     ?? b.IMPACT     ?? b.I ?? 0
+    };
+
+    // FALLBACK TAMBAHAN: Jika total breakdown nol tapi ada evaluator_score / total_score utama
+    const mainScore = data.total_score || data.evaluator_score || data.estimated_score || 0;
+    const currentSum = Object.values(totals).reduce((acc, curr) => acc + curr, 0);
+
+    // Jika total breakdown masih 0 tapi mainScore ada, distribusikan sementara ke Efficiency
+    if (currentSum === 0 && mainScore > 0) {
+        totals.Efficiency = mainScore;
+    }
     
     if (document.getElementById('score-eff')) document.getElementById('score-eff').textContent = `${totals.Efficiency} pts`;
     if (document.getElementById('score-net')) document.getElementById('score-net').textContent = `${totals.Network} pts`;
@@ -78,21 +128,24 @@ export function renderDashboard(data, allLeaderboardData = [], chapterSubmission
         }
     });
 
-    renderRadarChart(totals);
-    renderStarCardsList(totals);
+    renderRadarChart(totals, dynamicMaxScores);
+    renderStarCardsList(totals, dynamicMaxScores);
+    
+    renderDeadlineCalendarWidget(standardsData, chapterSubmissions);
+    renderUpcomingDeadlines(standardsData, chapterSubmissions);
 }
 
-export function renderRadarChart(totals) {
+export function renderRadarChart(totals, maxTargets) {
     const ctx = document.getElementById('starRadarChart');
     if (!ctx) return;
     if (radarChartInstance) radarChartInstance.destroy();
 
     const categories = ['Efficiency', 'Network', 'Experience', 'Outreach', 'Impact'];
-    const maxTargets = { Efficiency: 140, Network: 250, Experience: 250, Outreach: 250, Impact: 250 };
     const rawScores = categories.map(cat => totals[cat] || 0);
 
     const percentages = categories.map((cat, index) => {
-        return Math.min(100, Math.round((rawScores[index] / maxTargets[cat]) * 100));
+        const target = maxTargets[cat] || 100;
+        return Math.min(100, Math.round((rawScores[index] / target) * 100));
     });
 
     radarChartInstance = new Chart(ctx, {
@@ -130,7 +183,7 @@ export function renderRadarChart(totals) {
                         label: function(context) {
                             const cat = categories[context.dataIndex];
                             const currentScore = rawScores[context.dataIndex];
-                            const maxScore = maxTargets[cat];
+                            const maxScore = maxTargets[cat] || 100;
                             return ` Score: ${currentScore} / ${maxScore} pts (${context.raw}%)`;
                         }
                     }
@@ -140,169 +193,84 @@ export function renderRadarChart(totals) {
     });
 }
 
-export function renderStarCardsList(totals) {
+export function renderStarCardsList(totals, maxTargets) {
     const container = document.getElementById('starCardsList');
     if (!container) return;
 
+    const effScore = totals.Efficiency || 0;
+
     const starsConfig = [
-        { star: 'Efficiency', reqText: 'Qualify: Score >= 100 pts', target: 100, score: totals.Efficiency || 0, desc: 'Healthy operational governance, financial discipline, & compliance.' },
-        { star: 'Network', reqText: 'Qualify: Eff >= 90 & Net >= 250 pts', target: 250, score: totals.Network || 0, desc: 'Connecting members to regional, national, & international conventions.' },
-        { star: 'Experience', reqText: 'Qualify: Eff >= 90 & Exp >= 250 pts', target: 250, score: totals.Experience || 0, desc: 'Structured member development, leadership roles, and competitions.' },
-        { star: 'Outreach', reqText: 'Qualify: Eff >= 90 & Out >= 250 pts', target: 250, score: totals.Outreach || 0, desc: 'External visibility, media recognition, and strategic partnerships.' },
-        { star: 'Impact', reqText: 'Qualify: Eff >= 90 & Imp >= 250 pts', target: 250, score: totals.Impact || 0, desc: 'Measurable outcomes, community projects, and movement contribution.' }
+        { 
+            star: 'Efficiency', 
+            catKey: 'EFFICIENCY', 
+            reqText: 'Qualify: Score >= 100 pts', 
+            target: maxTargets.Efficiency || 140, 
+            score: effScore, 
+            isQual: effScore >= 100,
+            desc: 'Healthy operational governance, financial discipline, & compliance.' 
+        },
+        { 
+            star: 'Network', 
+            catKey: 'NETWORK', 
+            reqText: 'Qualify: Eff >= 90 & Net >= 250 pts', 
+            target: maxTargets.Network || 250, 
+            score: totals.Network || 0, 
+            isQual: effScore >= 90 && (totals.Network || 0) >= 250,
+            desc: 'Connecting members to regional, national, & international conventions.' 
+        },
+        { 
+            star: 'Experience', 
+            catKey: 'EXPERIENCE', 
+            reqText: 'Qualify: Eff >= 90 & Exp >= 250 pts', 
+            target: maxTargets.Experience || 250, 
+            score: totals.Experience || 0, 
+            isQual: effScore >= 90 && (totals.Experience || 0) >= 250,
+            desc: 'Structured member development, leadership roles, and competitions.' 
+        },
+        { 
+            star: 'Outreach', 
+            catKey: 'OUTREACH', 
+            reqText: 'Qualify: Eff >= 90 & Out >= 250 pts', 
+            target: maxTargets.Outreach || 250, 
+            score: totals.Outreach || 0, 
+            isQual: effScore >= 90 && (totals.Outreach || 0) >= 250,
+            desc: 'External visibility, media recognition, and strategic partnerships.' 
+        },
+        { 
+            star: 'Impact', 
+            catKey: 'IMPACT', 
+            reqText: 'Qualify: Eff >= 90 & Imp >= 250 pts', 
+            target: maxTargets.Impact || 250, 
+            score: totals.Impact || 0, 
+            isQual: effScore >= 90 && (totals.Impact || 0) >= 250,
+            desc: 'Measurable outcomes, community projects, and movement contribution.' 
+        }
     ];
 
     container.innerHTML = starsConfig.map(sc => {
-        const isQual = sc.score >= sc.target;
         const percent = Math.min(100, Math.round((sc.score / sc.target) * 100));
 
         return `
-            <div class="bg-white rounded-2xl p-5 border ${isQual ? 'border-jci-gold shadow-md' : 'border-slate-200 shadow-sm'} flex items-center justify-between">
+            <div class="bg-white rounded-2xl p-5 border ${sc.isQual ? 'border-jci-gold shadow-md' : 'border-slate-200 shadow-sm'} flex items-center justify-between">
                 <div class="space-y-1 flex-grow">
                     <div class="flex items-center space-x-2">
                         <span class="text-base font-extrabold text-slate-900">${sc.star} Star</span>
-                        ${isQual ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300"><i class="fa-solid fa-star text-jci-gold"></i> QUALIFIED</span>' : '<span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500">In Progress</span>'}
+                        ${sc.isQual 
+                            ? '<span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800 border border-amber-300"><i class="fa-solid fa-star text-jci-gold"></i> QUALIFIED</span>' 
+                            : '<span class="px-2 py-0.5 rounded-full text-[10px] bg-slate-100 text-slate-500">In Progress</span>'
+                        }
                     </div>
                     <p class="text-xs text-slate-500">${sc.desc}</p>
                     <div class="text-[11px] font-semibold text-slate-400">${sc.reqText}</div>
                     <div class="w-full bg-slate-100 rounded-full h-2 mt-2 max-w-md border border-slate-200">
-                        <div class="${isQual ? 'bg-jci-gold' : 'bg-jci-blue'} h-2 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
+                        <div class="${sc.isQual ? 'bg-jci-gold' : 'bg-jci-blue'} h-2 rounded-full transition-all duration-300" style="width: ${percent}%"></div>
                     </div>
                 </div>
                 <div class="text-right min-w-[110px] pl-4 border-l border-slate-100">
                     <span class="text-2xl font-black text-slate-800">${sc.score}</span>
                     <span class="text-xs text-slate-400"> / ${sc.target} pts</span>
-                    <button onclick="switchTab('standards'); filterCategory('${sc.star.toUpperCase()}');" class="mt-2 text-xs text-jci-blue font-semibold hover:underline block">Manage Standards &rarr;</button>
+                    <button onclick="if(window.switchTab) window.switchTab('standards'); setTimeout(() => { if(window.filterCategory) window.filterCategory('${sc.catKey}'); }, 50);" class="mt-2 text-xs text-jci-blue font-semibold hover:underline block cursor-pointer">Manage Standards &rarr;</button>
                 </div>
-            </div>
-        `;
-    }).join('');
-}
-
-export function changeCalMonth(offset) {
-    calCurrentDate.setMonth(calCurrentDate.getMonth() + offset);
-    if (window.renderDeadlineCalendarWidget) window.renderDeadlineCalendarWidget();
-}
-
-export function renderDeadlineCalendarWidget(standardsData = [], chapterSubmissions = {}) {
-    const gridContainer = document.getElementById('calGridDays');
-    const monthTitle = document.getElementById('calMonthYearTitle');
-    if (!gridContainer || !monthTitle) return;
-
-    const year = calCurrentDate.getFullYear();
-    const month = calCurrentDate.getMonth();
-
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    monthTitle.textContent = `${monthNames[month]} ${year}`;
-
-    const deadlineMap = {};
-    standardsData.forEach(std => {
-        const dStr = std.deadline || '2026-12-31';
-        if (!deadlineMap[dStr]) deadlineMap[dStr] = [];
-        
-        const stdId = std.id || std.standard_id || std.code;
-        const sub = chapterSubmissions[stdId];
-        const isApproved = sub && (sub.status === 'Approved' || sub.status === 'APPROVED');
-
-        deadlineMap[dStr].push({
-            id: stdId,
-            name: std.name || std.title,
-            star: std.star || std.star_category,
-            isApproved: isApproved
-        });
-    });
-
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-
-    let gridHtml = '';
-    for (let i = 0; i < firstDay; i++) {
-        gridHtml += `<div class="p-1.5"></div>`;
-    }
-
-    for (let day = 1; day <= daysInMonth; day++) {
-        const dayFormatted = String(day).padStart(2, '0');
-        const monthFormatted = String(month + 1).padStart(2, '0');
-        const dateKey = `${year}-${monthFormatted}-${dayFormatted}`;
-
-        const itemsOnDate = deadlineMap[dateKey] || [];
-        let dayBg = "hover:bg-slate-200 text-slate-700 font-medium cursor-pointer";
-
-        if (itemsOnDate.length > 0) {
-            const hasPending = itemsOnDate.some(item => !item.isApproved);
-            dayBg = hasPending 
-                ? "bg-rose-500 text-white font-extrabold rounded-lg shadow-sm cursor-pointer hover:bg-rose-600" 
-                : "bg-emerald-500 text-white font-extrabold rounded-lg shadow-sm cursor-pointer hover:bg-emerald-600";
-        }
-
-        let popupHtml = '';
-        if (itemsOnDate.length > 0) {
-            const listItems = itemsOnDate.map(i => `
-                <div class="flex items-start justify-between gap-3 py-1.5 border-b border-slate-100 last:border-none">
-                    <span class="font-semibold text-slate-700 leading-tight"><strong class="text-jci-blue">[${i.id}]</strong> ${i.name}</span>
-                    <span class="shrink-0 text-[9px] px-2 py-0.5 rounded-md font-extrabold ${i.isApproved ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}">
-                        ${i.isApproved ? 'Approved' : 'Pending'}
-                    </span>
-                </div>
-            `).join('');
-
-            popupHtml = `
-                <div class="absolute bottom-full left-1/2 -translate-x-1/2 mb-2.5 w-64 p-3 bg-white border border-slate-200/90 rounded-2xl shadow-2xl text-left z-50 hidden group-hover:block pointer-events-none">
-                    <div class="flex items-center justify-between pb-1.5 mb-1.5 border-b border-slate-100 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                        <span><i class="fa-regular fa-calendar text-jci-blue mr-1"></i> ${day} ${monthNames[month]} ${year}</span>
-                        <span class="bg-slate-100 px-1.5 py-0.5 rounded text-slate-600">${itemsOnDate.length} Deadline</span>
-                    </div>
-                    <div class="space-y-1 max-h-40 overflow-y-auto pr-1">${listItems}</div>
-                </div>
-            `;
-        }
-
-        gridHtml += `
-            <div class="p-1.5 rounded-lg text-center ${dayBg} relative group transition">
-                ${day}
-                ${popupHtml}
-            </div>
-        `;
-    }
-    gridContainer.innerHTML = gridHtml;
-}
-
-export function getDaysLeftText(deadlineStr) {
-    if (!deadlineStr) return 'No Deadline';
-    const targetDate = new Date(deadlineStr);
-    const today = new Date();
-    today.setHours(0,0,0,0);
-    targetDate.setHours(0,0,0,0);
-
-    const diffDays = Math.ceil((targetDate - today) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return `<span class="text-rose-600 font-bold">${deadlineStr} (Expired)</span>`;
-    if (diffDays === 0) return `<span class="text-amber-600 font-bold">${deadlineStr} (Today)</span>`;
-    return `<span class="text-slate-600">${deadlineStr} <strong class="text-blue-600">(${diffDays}d left)</strong></span>`;
-}
-
-export function renderUpcomingDeadlines(standardsData = [], chapterSubmissions = {}) {
-    const container = document.getElementById('upcomingDeadlinesList');
-    const urgentCount = document.getElementById('urgentCount');
-    if (!container) return;
-
-    const pendingStds = standardsData.filter(std => {
-        const stdId = std.id || std.standard_id || std.code;
-        const sub = chapterSubmissions[stdId];
-        return !sub || (sub.status !== 'Approved' && sub.status !== 'APPROVED');
-    });
-
-    if (urgentCount) urgentCount.textContent = `${pendingStds.length} Pending`;
-
-    container.innerHTML = pendingStds.slice(0, 5).map(std => {
-        const stdId = std.id || std.standard_id || std.code;
-        const stdName = std.name || std.title;
-        return `
-            <div class="p-2.5 bg-slate-50 border rounded-xl flex items-center justify-between">
-                <div>
-                    <span class="font-bold text-slate-800">${stdId}. ${stdName}</span>
-                    <p class="text-[10px] text-slate-400">Target: ${getDaysLeftText(std.deadline || '2026-12-31')}</p>
-                </div>
-                <span class="text-[10px] bg-rose-50 text-rose-600 font-bold px-2 py-0.5 rounded">Action Needed</span>
             </div>
         `;
     }).join('');

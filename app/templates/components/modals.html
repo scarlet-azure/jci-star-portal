@@ -1,28 +1,32 @@
-<!-- SUBMISSION MODAL POPUP (PIC) -->
-<div id="submissionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between border-b pb-3">
+<!-- ========================================== -->
+<!-- 1. SUBMISSION MODAL POPUP (PIC CHAPTER)   -->
+<!-- ========================================== -->
+<div id="submissionModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overscroll-none">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden transform-gpu transition-all">
+        <div class="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
             <h3 class="font-bold text-slate-900 text-base" id="modalStdTitle">1. Chapter Leadership Update</h3>
-            <button onclick="closeSubmissionModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <button type="button" onclick="closeSubmissionModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
         </div>
         
-        <form id="modalSubmissionForm" onsubmit="handleModalSubmit(event)" class="space-y-3 text-xs">
+        <form id="modalSubmissionForm" onsubmit="handleModalSubmit(event)" class="p-5 overflow-y-auto overscroll-contain space-y-3 text-xs shrink grow min-h-0">
             <input type="hidden" id="modalStdId">
             <div>
                 <label class="block font-semibold text-slate-700 mb-1">Submission Title *</label>
-                <input type="text" id="modalSubTitle" required class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue">
+                <input type="text" id="modalSubTitle" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-bold text-slate-800">
             </div>
             <div>
                 <label class="block font-semibold text-slate-700 mb-1">Description / Proof Summary *</label>
-                <textarea id="modalSubDesc" required rows="3" class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue"></textarea>
+                <textarea id="modalSubDesc" required rows="3" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-medium text-slate-700"></textarea>
             </div>
             <div>
-                <label class="block font-semibold text-slate-700 mb-1">Target Submission Deadline</label>
-                <input type="date" id="modalSubDeadline" class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue text-xs font-semibold text-slate-800 cursor-pointer">
+                <label class="block font-semibold text-slate-700 mb-1">Standard Submission Deadline</label>
+                <input type="date" readonly id="modalSubDeadline" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue text-xs font-semibold text-slate-800 cursor-pointer">
             </div>
             <div>
                 <label class="block font-semibold text-slate-700 mb-1">Evidence URL (Google Drive / PDF Link)</label>
-                <input type="url" id="modalSubUrl" placeholder="https://jci.or.id/evidence/file.pdf" class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue">
+                <input type="url" id="modalSubUrl" placeholder="https://jci.or.id/evidence/file.pdf" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-medium">
             </div>
             <div>
                 <label class="block font-semibold text-slate-700 mb-1">Upload File Evidence (PDF, PNG, JPG)</label>
@@ -34,35 +38,39 @@
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-2 pt-2 border-t">
-                <button type="button" onclick="closeSubmissionModal()" class="px-4 py-2 border rounded-xl text-slate-600 font-bold">Cancel</button>
-                <button type="submit" class="px-5 py-2 bg-jci-blue text-white rounded-xl font-bold hover:bg-jci-navy">Submit Evidence</button>
+            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100 shrink-0">
+                <button type="button" onclick="closeSubmissionModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-jci-blue text-white rounded-xl font-bold hover:bg-jci-navy transition shadow-xs">Submit Evidence</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- MODAL EDIT/ADD STANDARD (ADMIN) -->
-<div id="standardModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between border-b pb-3">
+<!-- ========================================== -->
+<!-- 2. MODAL EDIT/ADD STANDARD (ADMIN)  -->
+<!-- ========================================== -->
+<div id="standardModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overscroll-none">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden transform-gpu transition-all">
+        <div class="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
             <h3 class="font-bold text-slate-900 text-base" id="stdModalTitle">Add / Edit Standard</h3>
-            <button onclick="closeStandardModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <button type="button" onclick="closeStandardModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
         </div>
         
-        <form id="standardForm" onsubmit="handleStandardFormSubmit(event)" class="space-y-3 text-xs">
+        <form id="standardForm" onsubmit="handleStandardFormSubmit(event)" class="p-5 overflow-y-auto overscroll-contain space-y-3 text-xs shrink grow min-h-0">
             <input type="hidden" id="sFormMode" value="add">
             <div>
                 <label class="block font-semibold text-slate-700 mb-1">Standard ID *</label>
-                <input type="text" id="sId" required placeholder="e.g. EFF-15" class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue">
+                <input type="text" id="sId" required placeholder="e.g. EFF-15" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-mono font-bold">
             </div>
             <div>
                 <label class="block font-semibold text-slate-700 mb-1">Standard Title *</label>
-                <input type="text" id="sName" required placeholder="Standard Name" class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue">
+                <input type="text" id="sName" required placeholder="Standard Name" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-bold">
             </div>
             <div>
                 <label class="block font-semibold text-slate-700 mb-1">Star Category *</label>
-                <select id="sStar" required class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue font-semibold">
+                <select id="sStar" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-semibold">
                     <option value="EFFICIENCY">EFFICIENCY</option>
                     <option value="NETWORK">NETWORK</option>
                     <option value="EXPERIENCE">EXPERIENCE</option>
@@ -72,40 +80,44 @@
             </div>
             <div>
                 <label class="block font-semibold text-slate-700 mb-1">Purpose / Description</label>
-                <textarea id="sPurpose" rows="2" placeholder="Description of standard..." class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue"></textarea>
+                <textarea id="sPurpose" rows="2" placeholder="Description of standard..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-medium"></textarea>
             </div>
             <div class="grid grid-cols-2 gap-3">
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1">Max Score *</label>
-                    <input type="number" id="sScore" required placeholder="10" class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue">
+                    <input type="number" id="sScore" required placeholder="10" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-bold text-emerald-700">
                 </div>
                 <div>
                     <label class="block font-semibold text-slate-700 mb-1">Deadline Target *</label>
-                    <input type="date" id="sDeadline" required class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue">
+                    <input type="date" id="sDeadline" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-semibold">
                 </div>
             </div>
 
-            <div class="flex justify-end space-x-2 pt-3 border-t">
-                <button type="button" onclick="closeStandardModal()" class="px-4 py-2 border rounded-xl text-slate-600 font-bold">Cancel</button>
-                <button type="submit" class="px-5 py-2 bg-jci-blue text-white rounded-xl font-bold hover:bg-jci-navy">Save Standard</button>
+            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100 shrink-0">
+                <button type="button" onclick="closeStandardModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-jci-blue text-white rounded-xl font-bold hover:bg-jci-navy transition shadow-xs">Save Standard</button>
             </div>
         </form>
     </div>
 </div>
 
-<!-- MODAL AUDIT SCORE (EVALUATOR) -->
-<div id="auditModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-lg w-full p-6 space-y-4 shadow-2xl relative max-h-[90vh] overflow-y-auto">
-        <div class="flex items-center justify-between border-b pb-3">
+<!-- ========================================== -->
+<!-- 3. MODAL AUDIT SCORE (EVALUATOR 5-STAR)    -->
+<!-- ========================================== -->
+<div id="auditModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overscroll-none">
+    <div class="bg-white rounded-3xl max-w-lg w-full shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden transform-gpu transition-all">
+        <div class="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
             <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
                 <i class="fa-solid fa-clipboard-check text-amber-500"></i> Audit Chapter Submission
             </h3>
-            <button onclick="closeAuditModal()" class="text-slate-400 hover:text-slate-600"><i class="fa-solid fa-xmark text-lg"></i></button>
+            <button type="button" onclick="closeAuditModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
         </div>
         
-        <form id="auditForm" onsubmit="handleAuditFormSubmit(event)" class="space-y-3 text-xs">
+        <form id="auditForm" onsubmit="handleAuditFormSubmit(event)" class="p-5 overflow-y-auto overscroll-contain space-y-3 text-xs shrink grow min-h-0">
             <input type="hidden" id="auditSubId">
-            <div class="bg-slate-50 p-3.5 rounded-xl border space-y-1">
+            <div class="bg-slate-50 p-3.5 rounded-xl border border-slate-200 space-y-1">
                 <div class="font-extrabold text-slate-900 text-sm" id="auditModalTitle">-</div>
                 <p class="text-slate-600" id="auditModalDesc">-</p>
                 <div id="auditModalUrlContainer" class="pt-1"></div>
@@ -113,7 +125,7 @@
 
             <div>
                 <label class="block font-semibold text-slate-700 mb-1">Audit Decision / Status *</label>
-                <select id="auditStatus" required onchange="handleAuditStatusChange(this.value)" class="w-full p-2.5 bg-slate-50 border rounded-xl font-bold focus:outline-none focus:border-jci-blue">
+                <select id="auditStatus" required onchange="handleAuditStatusChange(this.value)" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-jci-blue">
                     <option value="Approved">Approved (Terima & Beri Skor)</option>
                     <option value="Revision Requested">Revision Requested (Minta Revisi)</option>
                     <option value="Rejected">Rejected (Tolak)</option>
@@ -121,19 +133,245 @@
             </div>
 
             <div id="auditScoreGroup">
-                <label class="block font-semibold text-slate-700 mb-1">Awarded Score (Pts) *</label>
-                <input type="number" id="auditScore" placeholder="10" class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue font-bold">
+                <div class="flex items-center justify-between mb-1">
+                    <label class="block font-semibold text-slate-700">Awarded Score (Pts) *</label>
+                    <span id="auditScoreMaxLabel" class="text-[11px] font-extrabold text-rose-600">(Max Allowed: 10 pts)</span>
+                </div>
+                <input type="number" id="auditScore" placeholder="10" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-bold text-emerald-700">
             </div>
 
             <div>
                 <label class="block font-semibold text-slate-700 mb-1">Evaluator Notes / Feedback *</label>
-                <textarea id="auditNotes" required rows="3" placeholder="Berikan catatan atau instruksi revisi untuk Chapter PIC..." class="w-full p-2.5 bg-slate-50 border rounded-xl focus:outline-none focus:border-jci-blue"></textarea>
+                <textarea id="auditNotes" required rows="3" placeholder="Berikan catatan atau instruksi revisi untuk Chapter PIC..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-medium"></textarea>
             </div>
 
-            <div class="flex justify-end space-x-2 pt-3 border-t">
-                <button type="button" onclick="closeAuditModal()" class="px-4 py-2 border rounded-xl text-slate-600 font-bold">Cancel</button>
-                <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md">Submit Audit Result</button>
+            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100 shrink-0">
+                <button type="button" onclick="closeAuditModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md transition">Submit Audit Result</button>
             </div>
         </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 4. MODAL EDIT CHAPTER ROSTER (ADMIN)       -->
+<!-- ========================================== -->
+<div id="editChapterModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overscroll-none">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden transform-gpu transition-all">
+        <div class="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
+            <h3 class="font-bold text-slate-900 text-base">Edit Chapter Roster</h3>
+            <button type="button" onclick="closeEditChapterModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        
+        <form onsubmit="handleEditChapterFormSubmit(event)" class="p-5 overflow-y-auto overscroll-contain space-y-3 text-xs shrink grow min-h-0">
+            <input type="hidden" id="mEditChapterOldName">
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Nama Chapter *</label>
+                <input type="text" id="mEditChapterName" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-bold">
+            </div>
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Assigned NVP</label>
+                <input type="text" id="mEditNvpName" placeholder="e.g. NVP Alim" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-medium">
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100 shrink-0">
+                <button type="button" onclick="closeEditChapterModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-jci-blue text-white rounded-xl font-bold hover:bg-jci-navy transition shadow-xs">Simpan Perubahan</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 5. MODAL EDIT TAB SHEET KPI (ADMIN)        -->
+<!-- ========================================== -->
+<div id="tabEditorModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overscroll-none">
+    <div class="bg-white rounded-3xl max-w-md w-full shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden transform-gpu transition-all">
+        <div class="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
+            <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                <i class="fa-solid fa-folder-plus text-jci-blue"></i>
+                <span id="tabModalTitle">Tambah Tab Sheet Baru</span>
+            </h3>
+            <button type="button" onclick="closeTabEditorModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form id="tabEditorForm" onsubmit="handleSaveTabSubmit(event)" class="p-5 overflow-y-auto overscroll-contain space-y-3 text-xs shrink grow min-h-0">
+            <input type="hidden" id="mTabOldId" value="">
+            
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">ID Tab (Unique Key) *</label>
+                <input type="text" id="mTabId" required placeholder="e.g. tab_finance" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-mono font-bold text-slate-800">
+            </div>
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Judul Tab / Sheet *</label>
+                <input type="text" id="mTabTitle" required placeholder="e.g. 11. Finance & Audit" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-bold text-slate-800">
+            </div>
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Urutan Tampilan (Order)</label>
+                <input type="number" id="mTabOrder" value="1" min="1" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-bold text-slate-800">
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100 shrink-0">
+                <button type="button" onclick="closeTabEditorModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition">Batal</button>
+                <button type="submit" class="px-5 py-2 bg-jci-blue text-white rounded-xl font-bold hover:bg-jci-navy transition shadow-xs">Simpan Tab</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 6. MODAL EDIT FIELD & SKORING KPI (ADMIN)  -->
+<!-- ========================================== -->
+<div id="fieldEditorModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overscroll-none">
+    <div class="bg-white rounded-3xl max-w-xl w-full shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden transform-gpu transition-all">
+        <div class="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
+            <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                <i class="fa-solid fa-pen-to-square text-jci-blue"></i>
+                <span id="fieldModalTitle">Konfigurasi Kriteria KPI & Scoring</span>
+            </h3>
+            <button type="button" onclick="closeFieldEditorModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <form id="fieldEditorForm" onsubmit="handleSaveFieldSubmit(event)" class="p-5 overflow-y-auto overscroll-contain space-y-3 text-xs shrink grow min-h-0">
+            <input type="hidden" id="editorTabId">
+            <input type="hidden" id="editorOldFieldKey">
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Unique Field Key *</label>
+                    <input type="text" id="mFieldKey" required placeholder="e.g. lbod_update_status" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-mono font-bold text-slate-800">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Tipe Input *</label>
+                    <select id="mFieldType" onchange="toggleOptionScoringSection()" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-bold text-slate-800">
+                        <option value="select">Dropdown / Choice (Pilihan & Skor Terpisah)</option>
+                        <option value="checkbox">Checkbox (Satu Skor Tetap)</option>
+                        <option value="number">Input Angka / Counter</option>
+                        <option value="text">Input Teks / Tautan Drive</option>
+                    </select>
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Label Kriteria / Aspek *</label>
+                <input type="text" id="mFieldLabel" required placeholder="e.g. 1) Mengupdate data LBOD 2026..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-bold text-slate-800">
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Skor Maksimal / Bobot (Pts)</label>
+                <input type="number" id="mFieldMaxScore" value="25" min="0" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-bold text-emerald-700">
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Instruksi & Petunjuk Pengisian</label>
+                <textarea id="mFieldDesc" rows="2" placeholder="Petunjuk pengerjaan..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-medium text-slate-700"></textarea>
+            </div>
+
+            <!-- SECTION DINAMIS UNTUK MENAMBAH PILIHAN OPSI DAN SKOR TERPISAH -->
+            <div id="optionsSection" class="space-y-2 border-t border-slate-200 pt-3">
+                <div class="flex items-center justify-between">
+                    <label class="font-bold text-slate-800">Daftar Pilihan Opsi & Skor</label>
+                    <button type="button" onclick="addOptionRow()" class="px-2.5 py-1 bg-blue-50 text-jci-blue hover:bg-blue-100 rounded-lg font-bold text-[11px] transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Tambah Opsi
+                    </button>
+                </div>
+                <div id="optionsList" class="space-y-2 max-h-48 overflow-y-auto pr-1"></div>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100 shrink-0">
+                <button type="button" onclick="closeFieldEditorModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition">Batal</button>
+                <button type="submit" class="px-5 py-2 bg-jci-blue text-white rounded-xl font-bold hover:bg-jci-navy transition shadow-xs">Simpan Kriteria</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 7. MODAL AUDIT KPI BREAKDOWN (EVALUATOR)   -->
+<!-- ========================================== -->
+<div id="kpiAuditModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 hidden flex items-center justify-center p-4 overscroll-none">
+    <div class="bg-white rounded-3xl max-w-2xl w-full shadow-2xl relative max-h-[85vh] flex flex-col overflow-hidden transform-gpu transition-all">
+        <div class="flex items-center justify-between border-b border-slate-100 p-5 shrink-0">
+            <div>
+                <h3 class="font-bold text-slate-900 text-base flex items-center gap-2">
+                    <i class="fa-solid fa-clipboard-check text-emerald-600"></i> Audit Form KPI Self-Assessment
+                </h3>
+                <p id="kpiAuditChapterSubtitle" class="text-xs text-slate-500 mt-0.5">Chapter: -</p>
+            </div>
+            <button type="button" onclick="closeKpiAuditModal()" class="text-slate-400 hover:text-slate-600 p-1 rounded-lg hover:bg-slate-100 transition">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+        
+        <form onsubmit="handleKpiAuditSubmit(event)" class="p-5 overflow-y-auto overscroll-contain space-y-4 text-xs shrink grow min-h-0">
+            <input type="hidden" id="kpiAuditSubId">
+            
+            <!-- Container Breakdown Tabs Isian Chapter -->
+            <div id="kpiAuditSummaryContainer"></div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Status Hasil Audit *</label>
+                    <select id="kpiAuditStatus" required class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold focus:outline-none focus:border-jci-blue">
+                        <option value="OK / Approved">OK / Approved</option>
+                        <option value="Needs Clarification">Needs Clarification (Minta Klarifikasi)</option>
+                        <option value="Rejected">Rejected</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Total Nilai Evaluator (Pts) *</label>
+                    <input type="number" id="kpiAuditScore" required placeholder="0" class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-bold text-emerald-700 text-sm">
+                </div>
+            </div>
+
+            <div>
+                <label class="block font-semibold text-slate-700 mb-1">Catatan & Feedback Evaluator *</label>
+                <textarea id="kpiAuditFeedback" required rows="3" placeholder="Berikan catatan evaluasi untuk Chapter..." class="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:border-jci-blue font-medium"></textarea>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100 shrink-0">
+                <button type="button" onclick="closeKpiAuditModal()" class="px-4 py-2 border border-slate-200 rounded-xl text-slate-600 font-bold hover:bg-slate-50 transition">Cancel</button>
+                <button type="submit" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold shadow-md transition">Simpan Audit KPI</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- ========================================== -->
+<!-- 8. MODAL KALENDER DASHBOARD   -->
+<!-- ========================================== -->
+<div id="dateDeadlineModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-2xl max-w-md w-full p-5 shadow-2xl space-y-4 border border-slate-100">
+        <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center">
+                    <i class="fa-solid fa-calendar-day"></i>
+                </div>
+                <div>
+                    <h3 id="modalDeadlineDateTitle" class="font-bold text-slate-900 text-sm">Deadline 18 Oktober 2026</h3>
+                    <p class="text-[11px] text-slate-500">Daftar Standar 5-Star yang jatuh tempo hari ini</p>
+                </div>
+            </div>
+            <button onclick="closeDateDeadlineModal()" class="text-slate-400 hover:text-slate-600 p-1">
+                <i class="fa-solid fa-xmark text-lg"></i>
+            </button>
+        </div>
+
+        <!-- Container Daftar Standar -->
+        <div id="modalDeadlineItemsContainer" class="space-y-2.5 max-h-64 overflow-y-auto pr-1">
+            <!-- Item dirender via JS -->
+        </div>
+
+        <div class="pt-2 text-right">
+            <button onclick="closeDateDeadlineModal()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition">
+                Tutup
+            </button>
+        </div>
     </div>
 </div>
