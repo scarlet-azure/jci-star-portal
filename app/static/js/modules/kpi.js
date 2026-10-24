@@ -98,12 +98,11 @@ function renderSingleKpiField(field) {
         `;
     }
 
-    // Menggunakan pemanggilan variabel Javascript asli tanpa backslash
     return `
         <div class="space-y-1 bg-white p-4 border border-slate-200 rounded-xl">
             <div class="flex items-center justify-between mb-1">
                 <label class="block font-bold text-xs text-slate-800">${label}</label>
-                ${maxPts > 0 ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">Max: \${maxPts} pts</span>` : ''}
+                ${maxPts > 0 ? `<span class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg">Max: ${maxPts} pts</span>` : ''}
             </div>
             ${desc}
             ${inputHtml}
@@ -148,54 +147,63 @@ export function collectKpiFormData() {
     return formData;
 }
 
-export function calculateEstimatedKpiScore() {
+export function calculateKpiScoresBreakdown() {
     let totalScore = 0;
+    const sectionScores = {};
     const schemaToUse = activeKpiTemplateSchema || [];
 
-    schemaToUse.forEach(t => {
-        (t.fields || []).forEach(field => {
-            const input = document.getElementById(`kpi_${field.key}`);
-            if (!input || !input.value) return;
+    schemaToUse.forEach((tab, idx) => {
+        let tabScore = 0;
+        const secKey = `s${idx + 1}`;
+        const customId = tab.id || secKey;
+
+        (tab.fields || []).forEach(field => {
+            const key = field.key || field.id;
+            const input = document.getElementById(`kpi_${key}`);
+            if (!input || input.value === undefined || input.value === '') return;
 
             const val = input.value;
-            if (field.type === 'select' && Array.isArray(field.options)) {
-                const opt = field.options.find(o => String(o.label) === String(val));
-                if (opt) totalScore += parseInt(opt.score || 0);
-            } else if (field.type === 'number') {
-                const num = parseInt(val || 0);
-                const maxPts = field.max_score || field.max_points || 25;
-                totalScore += Math.min(num, maxPts);
+            const fieldType = field.type || field.input_type || (field.options ? 'select' : 'text');
+
+            if (fieldType === 'select' && Array.isArray(field.options)) {
+                const opt = field.options.find(o => String(o.label || o.value || o) === String(val));
+                if (opt) tabScore += parseInt(opt.score ?? opt.points ?? 0, 10);
+            } else if (fieldType === 'number') {
+                const num = parseInt(val || 0, 10);
+                const maxPts = field.max_score || field.max_points || field.weight || 25;
+                if (!isNaN(num)) tabScore += Math.min(Math.max(0, num), maxPts);
             }
         });
+
+        sectionScores[secKey] = tabScore;
+        sectionScores[customId] = tabScore;
+        totalScore += tabScore;
     });
 
+    return { totalScore, sectionScores };
+}
+
+export function calculateEstimatedKpiScore() {
+    const { totalScore } = calculateKpiScoresBreakdown();
     const totalEl = document.getElementById('kpiScoreTotal');
     if (totalEl) totalEl.textContent = `${totalScore} pts`;
-
     return totalScore;
-}
-
-export async function handleSaveDraftKpi(e) {
-    if (e) e.preventDefault();
-    await submitKpiPayload('Draft');
-}
-
-export async function handleSubmitKpiForm(e) {
-    if (e) e.preventDefault();
-    await submitKpiPayload('Submitted');
 }
 
 async function submitKpiPayload(statusStr) {
     const chapterName = window.state?.currentChapter || localStorage.getItem('currentChapter') || 'Jakarta';
     const formData = collectKpiFormData();
-    const scoreCalculated = calculateEstimatedKpiScore();
+    const { totalScore, sectionScores } = calculateKpiScoresBreakdown();
+
+    // Simpan rincian skor per tab/section secara dinamis di dalam form_data
+    formData._section_scores = sectionScores;
 
     const payload = {
         chapter_name: chapterName,
         year: 2026,
         status: statusStr,
-        self_score: scoreCalculated,
-        evaluator_score: scoreCalculated,
+        self_score: totalScore,
+        evaluator_score: totalScore,
         form_data: formData,
         membership_data: formData
     };
@@ -217,6 +225,16 @@ async function submitKpiPayload(statusStr) {
     } catch (err) {
         alert("Error menyimpan KPI: " + err.message);
     }
+}
+
+export async function handleSaveDraftKpi(e) {
+    if (e) e.preventDefault();
+    await submitKpiPayload('Draft');
+}
+
+export async function handleSubmitKpiForm(e) {
+    if (e) e.preventDefault();
+    await submitKpiPayload('Submitted');
 }
 
 // Memuat dan mengisi ulang nilai ke elemen form saat halaman dibuka/direload

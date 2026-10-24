@@ -4,7 +4,7 @@ from typing import Optional
 
 import jwt
 from passlib.context import CryptContext
-from fastapi import Depends, HTTPException, status
+from fastapi import Depends, HTTPException, status, Request
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
@@ -77,3 +77,30 @@ def get_current_user(token: str = Depends(oauth2_scheme), db: Session = Depends(
         raise credentials_exception
         
     return user
+
+# ==========================================
+# 3. CURRENT USER
+# ==========================================
+
+def get_current_user_optional(request: Request, db: Session = Depends(get_db)) -> Optional[User]:
+    """Mengambil objek User yang sedang login dari Bearer Token (atau header X-User-Email) tanpa melempar 401 jika kosong."""
+    auth_header = request.headers.get("Authorization")
+    if auth_header and auth_header.startswith("Bearer "):
+        token = auth_header.split(" ")[1].strip()
+        if token and token != "null" and token != "undefined":
+            try:
+                payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+                email = payload.get("sub")
+                if email:
+                    user = db.query(User).filter(User.email == email).first()
+                    if user:
+                        return user
+            except Exception:
+                pass
+
+    # Fallback jika frontend mengirim email user di header
+    user_email = request.headers.get("X-User-Email")
+    if user_email:
+        return db.query(User).filter(User.email == user_email).first()
+
+    return None

@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
-from app.core.security import hash_password, verify_password
+from app.core.security import hash_password, verify_password, create_access_token
 from app.models.models import User, UserRole
 from app.schemas.schemas import (
     RegisterRequest, 
@@ -46,8 +46,20 @@ def login(data: LoginRequest, db: Session = Depends(get_db)):
     if role_str != "ADMIN" and not user.is_approved:
         raise HTTPException(status_code=403, detail="Akun Anda masih menunggu persetujuan dari National Evaluator Desk.")
 
+    # Generate JWT token untuk autentikasi & isolasi akses per Chapter
+    token_str = create_access_token(
+        data={
+            "sub": user.email,
+            "role": role_str,
+            "chapter_name": user.chapter_name or "JCI Jakarta"
+        }
+    )
+
     return {
         "message": "Login berhasil",
+        "access_token": token_str,
+        "token": token_str,
+        "token_type": "bearer",
         "email": user.email,
         "full_name": user.full_name or user.email,
         "role": role_str,

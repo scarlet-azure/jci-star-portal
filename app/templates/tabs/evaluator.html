@@ -41,13 +41,18 @@
     <!-- 1. TAB ROSTER MANAGEMENT -->
     <div id="admin-subtab-roster" class="admin-subtab-content space-y-4">
         <div class="bg-white p-5 rounded-xl border border-slate-200 shadow-sm space-y-4">
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-2">
                 <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
                     <i class="fa-solid fa-sitemap text-jci-blue"></i> National Chapter Roster Management
                 </h4>
-                <button onclick="openAddChapterModal()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition flex items-center space-x-1.5 shadow-xs cursor-pointer">
-                    <i class="fa-solid fa-plus"></i><span>Add Chapter</span>
-                </button>
+                <div class="flex items-center gap-2">
+                    <button onclick="handleFinalizeAnnualArchive(2026)" class="px-3.5 py-1.5 bg-amber-600 hover:bg-amber-700 text-white font-bold rounded-lg text-xs transition flex items-center space-x-1.5 shadow-xs cursor-pointer" title="Finalisasi seluruh submission tahun ini ke Arsip & siapkan tahun baru">
+                        <i class="fa-solid fa-box-archive"></i><span>Finalize & Archive Year</span>
+                    </button>
+                    <button onclick="openAddChapterModal()" class="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs transition flex items-center space-x-1.5 shadow-xs cursor-pointer">
+                        <i class="fa-solid fa-plus"></i><span>Add Chapter</span>
+                    </button>
+                </div>
             </div>
             <div id="evaluatorChapterList" class="w-full"></div>
         </div>
@@ -78,10 +83,6 @@
                     </h4>
                     <p class="text-xs text-slate-500 mt-0.5">Kelola instruksi kriteria dan bobot poin maksimal untuk penilaian KPI Self-Assessment Chapter.</p>
                 </div>
-                <!-- TOMBOL TAMBAH FIELD KRITERIA BARU -->
-                <button onclick="openAddKpiFieldModal()" class="px-3.5 py-1.5 bg-jci-blue hover:bg-jci-navy text-white font-bold rounded-lg text-xs transition flex items-center space-x-1.5 cursor-pointer shadow-xs">
-                    <i class="fa-solid fa-plus"></i><span>Add New KPI Field</span>
-                </button>
             </div>
             <div id="evaluatorKpiTemplateList" class="space-y-3"></div>
         </div>

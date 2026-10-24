@@ -45,14 +45,11 @@
         <div id="lb-content-kpi" class="lb-content overflow-x-auto hidden">
             <table class="w-full text-left border-collapse">
                 <thead>
-                    <tr class="bg-slate-50 border-b text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                    <tr id="kpiLeaderboardHead" class="bg-slate-50 border-b text-[11px] font-bold text-slate-400 uppercase tracking-wider">
                         <th class="py-3.5 px-4 text-center w-16">Rank</th>
                         <th class="py-3.5 px-4">Local Organization</th>
                         <th class="py-3.5 px-4 text-center">Status</th>
-                        <th class="py-3.5 px-4 text-center" title="1. Membership Management">S1: Mem</th>
-                        <th class="py-3.5 px-4 text-center" title="2. Legality & Compliance">S2: Leg</th>
-                        <th class="py-3.5 px-4 text-center" title="3. PoA & Strategic Plan">S3: PoA</th>
-                        <th class="py-3.5 px-4 text-center" title="4-10. Action Framework & Impact">S4-10: Act</th>
+                        <!-- Kolom Section (S1..Sn) akan dirender dinamis oleh leaderboard.js -->
                         <th class="py-3.5 px-4 text-right">Total KPI Score</th>
                     </tr>
                 </thead>
@@ -61,6 +58,5 @@
                 </tbody>
             </table>
         </div>
-
     </div>
 </div>

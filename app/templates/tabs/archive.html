@@ -1,10 +1,36 @@
 <div id="tab-archive" class="tab-content space-y-6 hidden">
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 space-y-4">
-        <h3 class="font-extrabold text-slate-900 text-sm">Annual Archives History</h3>
+    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 space-y-5">
         
-        <!-- PENTING: Penampung utama yang dicari oleh fungsi loadAnnualArchives() -->
-        <div id="archiveListContainer" class="space-y-3">
+        <!-- HEADER ARCHIVE -->
+        <div class="border-b border-slate-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div>
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-box-archive text-jci-blue text-lg"></i>
+                    <h3 class="font-extrabold text-slate-900 text-base">Annual Archives History</h3>
+                    <span id="archiveActiveChapterBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-blue-50 text-jci-blue border border-blue-200">
+                        Chapter Archive
+                    </span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">
+                    Rekaman permanen capaian Star Program, KPI Self-Assessment, bukti dokumen, dan histori PIC dari tahun ke tahun.
+                </p>
+            </div>
+
+            <!-- KONTROL KHUSUS ADMIN (Otomatis disembunyikan untuk akun Chapter PIC) -->
+            <div id="adminArchiveControls" class="hidden flex flex-wrap items-center gap-2 bg-amber-50/70 p-2 rounded-xl border border-amber-200">
+                <select id="archiveChapterSelect" onchange="loadAnnualArchives(this.value)" class="text-xs font-bold bg-white border border-slate-300 text-slate-800 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-jci-blue">
+                    <option value="">-- Pilih Chapter --</option>
+                </select>
+                <button type="button" onclick="handleFinalizeAnnualArchive(2026)" class="px-3.5 py-2 bg-amber-600 hover:bg-amber-700 text-white font-extrabold text-xs rounded-lg shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                    <i class="fa-solid fa-lock"></i> Finalisasi & Arsipkan Tahun
+                </button>
+            </div>
+        </div>
+
+        <!-- PENAMPUNG UTAMA DAFTAR ARSIP -->
+        <div id="archiveListContainer" class="space-y-4">
             <p class="text-xs text-slate-400">Loading archives...</p>
         </div>
+
     </div>
 </div>

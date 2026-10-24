@@ -170,3 +170,14 @@ export function closeModal(modalId) {
     document.body.classList.remove('overflow-hidden');
 }
 window.closeModal = closeModal;
+
+// Tambahkan di bagian paling bawah app/static/js/modules/admin.js:
+document.addEventListener('DOMContentLoaded', () => {
+    loadHandbooks();
+
+    // Jika tombol tab Reference di navbar diklik, muat ulang daftar dokumen terbaru
+    const refTabBtn = document.getElementById('tabBtn-reference') || document.querySelector('[onclick*="reference"]');
+    if (refTabBtn) {
+        refTabBtn.addEventListener('click', () => loadHandbooks());
+    }
+});

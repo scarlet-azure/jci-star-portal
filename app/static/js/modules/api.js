@@ -1,11 +1,15 @@
 export const API_BASE = window.location.origin;
 
 export async function fetchAPI(url, options = {}) {
-    const token = localStorage.getItem('jci_token');
+    const token = localStorage.getItem('jci_token') || localStorage.getItem('token');
+    const savedEmail = localStorage.getItem('jci_email');
     const headers = { ...options.headers };
 
     if (token) {
         headers['Authorization'] = `Bearer ${token}`;
+    }
+    if (savedEmail) {
+        headers['X-User-Email'] = savedEmail;
     }
 
     if (options.body && !(options.body instanceof FormData) && !headers['Content-Type']) {

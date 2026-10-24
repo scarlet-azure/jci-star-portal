@@ -83,7 +83,7 @@ export function renderLeaderboard(data = []) {
 export const loadStarLeaderboard = renderLeaderboard;
 
 // ==========================================
-// 3. FETCH & RENDER KPI LEADERBOARD
+// 3. FETCH & RENDER KPI LEADERBOARD (DYNAMIC TABS)
 // ==========================================
 export async function loadKpiLeaderboard() {
     try {
@@ -91,14 +91,54 @@ export async function loadKpiLeaderboard() {
         if (!res || !res.ok) return;
 
         kpiLeaderboardCache = await res.json();
+        const theadRow = document.getElementById('kpiLeaderboardHead');
         const tbody = document.getElementById('kpiLeaderboardTable');
         if (!tbody) return;
 
+        // Ambil metadata daftar section dinamis dari item pertama (atau fallback fetch /kpi/schema)
+        let sectionMeta = (kpiLeaderboardCache.length > 0 && Array.isArray(kpiLeaderboardCache[0].section_meta))
+            ? kpiLeaderboardCache[0].section_meta
+            : [];
+
+        if (sectionMeta.length === 0) {
+            const schemaRes = await fetchAPI('/kpi/schema');
+            if (schemaRes && schemaRes.ok) {
+                const schemaData = await schemaRes.json();
+                if (Array.isArray(schemaData)) {
+                    sectionMeta = schemaData.map((tab, idx) => ({
+                        key: `s${idx + 1}`,
+                        short_label: `S${idx + 1}`,
+                        title: tab.title || tab.id || `Section ${idx + 1}`
+                    }));
+                }
+            }
+        }
+
+        // 1. Render Header Kolom (<thead>) secara dinamis mengikuti jumlah tab KPI
+        if (theadRow) {
+            const dynamicHeadersHtml = sectionMeta.map(meta => `
+                <th class="py-3.5 px-3 text-center whitespace-nowrap cursor-help" title="${meta.title}">
+                    ${meta.short_label}
+                </th>
+            `).join('');
+
+            theadRow.innerHTML = `
+                <th class="py-3.5 px-4 text-center w-16">Rank</th>
+                <th class="py-3.5 px-4">Local Organization</th>
+                <th class="py-3.5 px-4 text-center">Status</th>
+                ${dynamicHeadersHtml}
+                <th class="py-3.5 px-4 text-right whitespace-nowrap">Total KPI Score</th>
+            `;
+        }
+
+        const totalCols = 4 + sectionMeta.length;
+
         if (!Array.isArray(kpiLeaderboardCache) || kpiLeaderboardCache.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-slate-400">Belum ada data KPI Self-Assessment.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="${totalCols}" class="p-4 text-center text-slate-400">Belum ada data KPI Self-Assessment.</td></tr>`;
             return;
         }
 
+        // 2. Render Baris Chapter (<tbody>) beserta kolom-kolom skor per section-nya
         tbody.innerHTML = kpiLeaderboardCache.map((item, idx) => {
             let rankBadge = `<span class="font-bold text-slate-500">#${idx + 1}</span>`;
             if (idx === 0) rankBadge = `<span class="px-2.5 py-1 rounded-full bg-amber-100 text-amber-800 font-black text-xs">🥇 #1</span>`;
@@ -116,17 +156,19 @@ export async function loadKpiLeaderboard() {
                 statusBadge = `<span class="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-800 border border-blue-300">🔵 Submitted</span>`;
             }
 
-            const sec = item.sections || { s1: 0, s2: 0, s3: 0, s4_10: 0 };
+            const sec = item.sections || {};
+            const dynamicCellsHtml = sectionMeta.map(meta => `
+                <td class="py-4 px-3 text-center font-semibold text-slate-600 whitespace-nowrap" title="${meta.title}: ${sec[meta.key] ?? 0} pts">
+                    ${sec[meta.key] ?? 0}
+                </td>
+            `).join('');
 
             return `
                 <tr class="hover:bg-slate-50 transition border-b border-slate-100">
                     <td class="py-4 px-4 text-center whitespace-nowrap">${rankBadge}</td>
                     <td class="py-4 px-4 font-extrabold text-slate-800 whitespace-nowrap">${item.chapter_name}</td>
                     <td class="py-4 px-4 text-center whitespace-nowrap">${statusBadge}</td>
-                    <td class="py-4 px-4 text-center font-semibold text-slate-600 whitespace-nowrap">${sec.s1}</td>
-                    <td class="py-4 px-4 text-center font-semibold text-slate-600 whitespace-nowrap">${sec.s2}</td>
-                    <td class="py-4 px-4 text-center font-semibold text-slate-600 whitespace-nowrap">${sec.s3}</td>
-                    <td class="py-4 px-4 text-center font-semibold text-slate-600 whitespace-nowrap">${sec.s4_10}</td>
+                    ${dynamicCellsHtml}
                     <td class="py-4 px-4 text-right font-black text-emerald-700 text-sm whitespace-nowrap">${item.evaluator_score || 0} pts</td>
                 </tr>
             `;

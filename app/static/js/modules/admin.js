@@ -1545,7 +1545,7 @@ window.loadPendingUsers = loadPendingUsers;
 window.approveUserAction = approveUserAction;
 
 // ==========================================
-// 7. HANDBOOK / REFERENCE MANAGEMENT
+// 7. HANDBOOK / REFERENCE MANAGEMENT (CONNECTED TO REFERENCE TAB)
 // ==========================================
 export function openAddHandbookModal() {
     if (document.getElementById('mDocTitle')) document.getElementById('mDocTitle').value = '';
@@ -1559,9 +1559,6 @@ export function openAddHandbookModal() {
 export function closeAddHandbookModal() {
     safeCloseModal('addHandbookModal');
 }
-
-window.openAddHandbookModal = openAddHandbookModal;
-window.closeAddHandbookModal = closeAddHandbookModal;
 
 export async function handleAddHandbookSubmit(e) {
     if (e) e.preventDefault();
@@ -1587,11 +1584,8 @@ export async function handleAddHandbookSubmit(e) {
     }
 
     try {
-        const res = await fetch('/admin/handbooks', {
+        const res = await fetchAPI('/admin/handbooks', {
             method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('token')}`
-            },
             body: formData
         });
 
@@ -1600,108 +1594,326 @@ export async function handleAddHandbookSubmit(e) {
 
         alert("Handbook reference berhasil ditambahkan!");
         closeAddHandbookModal();
-        loadHandbooks();
+        await loadHandbooks();
     } catch (err) {
         alert("Error: " + err.message);
     }
 }
 
-window.handleAddHandbookSubmit = handleAddHandbookSubmit;
-
 export async function loadHandbooks() {
     try {
-        const res = await fetchAPI('/handbooks');
+        let res = await fetchAPI('/handbooks');
+        if (!res || !res.ok) {
+            res = await fetchAPI('/admin/handbooks');
+        }
         if (!res || !res.ok) return;
 
         const list = await res.json();
-        const container = document.getElementById('evaluatorHandbookList');
-        if (!container) return;
 
-        if (!Array.isArray(list) || list.length === 0) {
-            container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Belum ada dokumen handbook / reference yang di-upload.</div>`;
-            return;
+        // 1. Render di halaman Admin Evaluator (#evaluatorHandbookList)
+        const adminContainer = document.getElementById('evaluatorHandbookList');
+        if (adminContainer) {
+            if (!Array.isArray(list) || list.length === 0) {
+                adminContainer.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 bg-white rounded-xl border border-slate-200">Belum ada dokumen handbook / reference yang di-upload.</div>`;
+            } else {
+                adminContainer.innerHTML = list.map(doc => `
+                    <div class="flex items-center justify-between bg-slate-50 p-4 border border-slate-200 rounded-xl hover:bg-white transition">
+                        <div class="space-y-1">
+                            <div class="flex items-center space-x-2">
+                                <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded uppercase">${doc.category || 'Handbook'}</span>
+                                <h5 class="text-xs font-bold text-slate-800">${doc.title}</h5>
+                            </div>
+                            ${doc.description ? `<p class="text-xs text-slate-500">${doc.description}</p>` : ''}
+                            <a href="${doc.file_url}" target="_blank" class="text-xs text-jci-blue hover:underline inline-flex items-center gap-1 font-semibold">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Open / Download Document
+                            </a>
+                        </div>
+                        <button type="button" onclick="handleDeleteHandbook('${doc.id}')" class="text-rose-500 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 p-2 rounded-lg transition cursor-pointer" title="Delete Document">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                    </div>
+                `).join('');
+            }
         }
 
-        container.innerHTML = list.map(doc => `
-            <div class="flex items-center justify-between bg-slate-50 p-4 border border-slate-200 rounded-xl hover:bg-white transition">
-                <div class="space-y-1">
-                    <div class="flex items-center space-x-2">
-                        <span class="text-[10px] font-bold bg-blue-100 text-blue-800 px-2 py-0.5 rounded uppercase">${doc.category || 'Handbook'}</span>
-                        <h5 class="text-xs font-bold text-slate-800">${doc.title}</h5>
-                    </div>
-                    ${doc.description ? `<p class="text-xs text-slate-500">\${doc.description}</p>` : ''}
-                    <a href="${doc.file_url}" target="_blank" class="text-xs text-jci-blue hover:underline inline-flex items-center gap-1 font-semibold">
-                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Open / Download Document
-                    </a>
-                </div>
-                <button onclick="handleDeleteHandbook(${doc.id})" class="text-rose-500 hover:text-rose-700 bg-rose-50 p-2 rounded-lg transition cursor-pointer" title="Delete Document">
-                    <i class="fa-solid fa-trash-can"></i>
-                </button>
-            </div>
-        `).join('');
+        // 2. Render juga di Tab Reference Publik/Chapter (#referenceHandbookList)
+        renderPublicReferenceTab(list);
+
     } catch (err) {
         console.error("Gagal load handbooks:", err);
     }
 }
 
+export function renderPublicReferenceTab(list = []) {
+    const refContainer = document.getElementById('referenceHandbookList') 
+        || document.getElementById('referenceListContainer') 
+        || document.getElementById('publicHandbookList');
+    if (!refContainer) return;
+
+    if (!Array.isArray(list) || list.length === 0) {
+        refContainer.innerHTML = `<div class="col-span-full p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-slate-200">Belum ada dokumen referensi resmi yang diunggah oleh National Admin.</div>`;
+        return;
+    }
+
+    refContainer.innerHTML = list.map(doc => {
+        let badgeColor = 'bg-blue-50 text-jci-blue border-blue-200';
+        if (doc.category === 'Template') badgeColor = 'bg-emerald-50 text-emerald-700 border-emerald-200';
+        else if (doc.category === 'Policy') badgeColor = 'bg-amber-50 text-amber-700 border-amber-200';
+
+        const uploadDate = doc.uploaded_at
+            ? new Date(doc.uploaded_at).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
+            : '';
+
+        return `
+            <div class="p-4 bg-white border border-slate-200 rounded-xl shadow-2xs hover:border-jci-blue/50 hover:shadow-sm transition flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="space-y-1">
+                    <div class="flex items-center gap-2">
+                        <span class="px-2.5 py-0.5 text-[10px] font-extrabold uppercase rounded-md border ${badgeColor}">
+                            ${doc.category || 'Handbook'}
+                        </span>
+                        ${uploadDate ? `<span class="text-[11px] text-slate-400"><i class="fa-regular fa-calendar mr-1"></i>${uploadDate}</span>` : ''}
+                    </div>
+                    <h4 class="font-extrabold text-slate-900 text-sm pt-0.5">${doc.title}</h4>
+                    ${doc.description ? `<p class="text-xs text-slate-500">${doc.description}</p>` : ''}
+                </div>
+                <div class="shrink-0">
+                    <a href="${doc.file_url}" target="_blank" download class="px-4 py-2 bg-jci-blue hover:bg-jci-navy text-white font-bold text-xs rounded-xl transition inline-flex items-center gap-2 shadow-xs">
+                        <i class="fa-solid fa-download"></i> Download / View
+                    </a>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
 export async function handleDeleteHandbook(docId) {
     if (!confirm("Apakah Anda yakin ingin menghapus dokumen reference ini?")) return;
 
-    try {
-        const res = await fetchAPI(`/admin/handbooks/${docId}`, { method: 'DELETE' });
-        const result = await res.json();
-        if (!res.ok) throw new Error(result.detail || "Gagal menghapus dokumen");
+    const endpointsToTry = [
+        `/admin/handbooks/${encodeURIComponent(docId)}`,
+        `/handbooks/${encodeURIComponent(docId)}`
+    ];
 
-        alert(result.message || "Dokumen berhasil dihapus!");
-        loadHandbooks();
-    } catch (err) {
-        alert("Gagal menghapus dokumen: " + err.message);
+    let deleted = false;
+    let lastErr = "Gagal menghapus dokumen";
+
+    for (const url of endpointsToTry) {
+        try {
+            const res = await fetchAPI(url, { method: 'DELETE' });
+            if (res && res.ok) {
+                const result = await res.json().catch(() => ({}));
+                alert(result.message || "Dokumen berhasil dihapus!");
+                await loadHandbooks();
+                deleted = true;
+                break;
+            } else if (res && res.status !== 404 && res.status !== 405) {
+                const errData = await res.json().catch(() => ({}));
+                lastErr = errData.detail || errData.message || lastErr;
+                break;
+            }
+        } catch (err) {
+            console.warn(`Gagal delete ke ${url}:`, err);
+        }
+    }
+
+    if (!deleted) {
+        alert("Gagal menghapus dokumen: " + lastErr);
     }
 }
 
+window.openAddHandbookModal = openAddHandbookModal;
+window.closeAddHandbookModal = closeAddHandbookModal;
+window.handleAddHandbookSubmit = handleAddHandbookSubmit;
+window.loadHandbooks = loadHandbooks;
+window.renderPublicReferenceTab = renderPublicReferenceTab;
 window.handleDeleteHandbook = handleDeleteHandbook;
 
 // ==========================================
-// 8. ANNUAL ARCHIVES
+// 8. ANNUAL ARCHIVES & YEARLY ROLLOVER
 // ==========================================
-export async function loadAnnualArchives(chapterName) {
+let loadedArchivesCache = [];
+
+export async function loadAnnualArchives(requestedChapterName) {
     const container = document.getElementById('archiveListContainer');
     if (!container) return;
 
+    const roleStr = state.currentRole || localStorage.getItem('jci_role') || 'CHAPTER_PIC';
+    const isUserAdmin = (roleStr === 'ADMIN' || roleStr === 'UserRole.ADMIN');
+    const myChapter = state.currentChapter || localStorage.getItem('jci_chapter') || 'Jakarta';
+
+    // ISOLASI CHAPTER: Jika bukan Admin, selalu kunci ke myChapter
+    const targetChapter = isUserAdmin ? (requestedChapterName || myChapter) : myChapter;
+
+    // Update badge nama chapter di header tab Archive
+    const badgeEl = document.getElementById('archiveActiveChapterBadge');
+    if (badgeEl) {
+        badgeEl.textContent = isUserAdmin ? `Viewing: ${targetChapter}` : `Khusus Chapter: ${myChapter}`;
+    }
+
+    // Tampilkan/sembunyikan kontrol Admin & isi dropdown chapter untuk Admin
+    const adminControls = document.getElementById('adminArchiveControls');
+    const archiveSelect = document.getElementById('archiveChapterSelect');
+    if (adminControls) {
+        if (isUserAdmin) {
+            adminControls.classList.remove('hidden');
+            if (archiveSelect && loadedChaptersCache.length > 0 && archiveSelect.options.length <= 1) {
+                archiveSelect.innerHTML = loadedChaptersCache.map(c => `
+                    <option value="${c.name}" ${c.name === targetChapter ? 'selected' : ''}>${c.name}</option>
+                `).join('');
+            } else if (archiveSelect) {
+                archiveSelect.value = targetChapter;
+            }
+        } else {
+            adminControls.classList.add('hidden');
+        }
+    }
+
     try {
-        let res = await fetchAPI(`/admin/archives/${encodeURIComponent(chapterName || state.currentChapter)}`);
+        let res = await fetchAPI(`/admin/archives/${encodeURIComponent(targetChapter)}`);
         if (!res || !res.ok) {
-            res = await fetchAPI(`/archives/${encodeURIComponent(chapterName || state.currentChapter)}`);
+            res = await fetchAPI(`/archives/${encodeURIComponent(targetChapter)}`);
         }
 
         if (!res || !res.ok) {
-            container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border">Belum ada arsip tahunan untuk ${chapterName || state.currentChapter}.</div>`;
+            const errData = res ? await res.json().catch(() => ({})) : {};
+            container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-slate-200">${errData.detail || `Belum ada arsip tahunan untuk ${targetChapter}.`}</div>`;
             return;
         }
 
-        const archives = await res.json();
+        loadedArchivesCache = await res.json();
 
-        if (!Array.isArray(archives) || archives.length === 0) {
-            container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border">Belum ada arsip tahunan untuk ${chapterName || state.currentChapter}.</div>`;
+        if (!Array.isArray(loadedArchivesCache) || loadedArchivesCache.length === 0) {
+            container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border border-slate-200">Belum ada arsip tahunan yang difinalisasi untuk <strong>${targetChapter}</strong>.</div>`;
             return;
         }
 
-        container.innerHTML = archives.map(a => `
-            <div class="p-4 bg-slate-50 border rounded-xl flex items-center justify-between">
-                <div>
-                    <span class="text-xs font-bold text-jci-blue">Tahun ${a.year}</span>
-                    <h4 class="font-extrabold text-slate-800 text-sm mt-0.5">${a.chapter_name}</h4>
-                    <p class="text-xs text-slate-500">${a.efficiency_band}</p>
+        container.innerHTML = loadedArchivesCache.map((a, idx) => {
+            const details = a.breakdown_json || {};
+            const picInfo = details.pic_info || {};
+            const subsList = Array.isArray(details.submissions) ? details.submissions : [];
+            const kpiInfo = details.kpi || null;
+
+            const picLabel = (picInfo.pic_names && picInfo.pic_names.length > 0)
+                ? picInfo.pic_names.join(', ')
+                : (picInfo.pic_email && picInfo.pic_email !== '-' ? picInfo.pic_email : 'PIC Periode ' + a.year);
+
+            const subsRowsHtml = subsList.length > 0
+                ? subsList.map(s => `
+                    <div class="flex items-center justify-between p-2.5 bg-white rounded-lg border border-slate-200 text-xs">
+                        <div>
+                            <span class="font-bold text-jci-blue">[${s.standard_id}]</span>
+                            <span class="font-semibold text-slate-800 ml-1">${s.title}</span>
+                            <p class="text-[11px] text-slate-500 mt-0.5">${s.description || '-'}</p>
+                            ${s.url ? `<a href="${s.url}" target="_blank" class="text-[11px] text-blue-600 hover:underline font-bold inline-flex items-center gap-1 mt-1"><i class="fa-solid fa-link"></i> Bukti Dokumen (${a.year})</a>` : ''}
+                        </div>
+                        <div class="text-right whitespace-nowrap ml-3">
+                            <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-700">${s.status}</span>
+                            <div class="font-extrabold text-emerald-700 mt-1">${s.score_earned || 0} pts</div>
+                        </div>
+                    </div>
+                `).join('')
+                : `<p class="text-xs text-slate-400 italic">Tidak ada rekaman detail dokumen submission pada arsip tahun ini.</p>`;
+
+            const kpiSummaryHtml = kpiInfo
+                ? `
+                    <div class="p-3 bg-emerald-50/60 border border-emerald-200 rounded-xl flex items-center justify-between">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase text-emerald-700">Arsip KPI Self-Assessment (${a.year})</span>
+                            <p class="text-xs text-slate-600 mt-0.5">Status Akhir: <strong>${kpiInfo.status || '-'}</strong></p>
+                            ${kpiInfo.evaluator_feedback ? `<p class="text-[11px] text-slate-500 mt-0.5">Catatan Evaluator: ${kpiInfo.evaluator_feedback}</p>` : ''}
+                        </div>
+                        <div class="text-right">
+                            <span class="text-sm font-black text-emerald-700">${kpiInfo.evaluator_score || 0} pts</span>
+                        </div>
+                    </div>
+                `
+                : '';
+
+            return `
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-2xs overflow-hidden">
+                    <div class="p-4 bg-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="px-2.5 py-0.5 rounded-md bg-jci-blue text-white text-xs font-extrabold">Arsip Tahun ${a.year}</span>
+                                <h4 class="font-extrabold text-slate-900 text-sm">${a.chapter_name}</h4>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">
+                                <i class="fa-solid fa-user-check mr-1 text-slate-400"></i> <strong>PIC (${a.year}):</strong> ${picLabel} 
+                                • <strong>NVP:</strong> ${picInfo.nvp_name || '-'}
+                                • <strong>Band:</strong> ${a.efficiency_band}
+                            </p>
+                        </div>
+                        <div class="flex items-center gap-4">
+                            <div class="text-right">
+                                <span class="text-xs font-bold text-amber-600 block"><i class="fa-solid fa-star"></i> ${a.qualified_stars} / 5 Stars</span>
+                                <span class="text-sm font-black text-slate-900">${a.total_score} pts (Star)</span>
+                            </div>
+                            <button type="button" onclick="toggleArchiveDetailPanel(${idx})" class="px-3 py-1.5 bg-white border border-slate-300 hover:bg-slate-100 rounded-xl text-xs font-bold text-slate-700 transition cursor-pointer">
+                                <i class="fa-solid fa-folder-open mr-1 text-jci-blue"></i> Lihat Rincian Arsip
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="archive-detail-panel-${idx}" class="hidden p-4 border-t border-slate-200 space-y-3 bg-slate-50/40">
+                        ${kpiSummaryHtml}
+                        <div>
+                            <h5 class="text-xs font-extrabold text-slate-700 uppercase tracking-wider mb-2">
+                                Daftar Bukti Submission 5-Star (${subsList.length} Dokumen)
+                            </h5>
+                            <div class="space-y-2 max-h-72 overflow-y-auto pr-1">
+                                ${subsRowsHtml}
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="text-right">
-                    <span class="text-xs font-bold text-amber-600"><i class="fa-solid fa-star"></i> ${a.qualified_stars} Stars</span>
-                    <div class="text-sm font-black text-slate-800">${a.total_score} pts</div>
-                </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (err) {
         console.warn("Notice: Archives tidak ditemukan / kosong:", err);
         container.innerHTML = `<div class="p-6 text-center text-xs text-slate-400 bg-slate-50 rounded-xl border">Belum ada arsip tahunan.</div>`;
     }
 }
+
+export function toggleArchiveDetailPanel(idx) {
+    const panel = document.getElementById(`archive-detail-panel-${idx}`);
+    if (panel) panel.classList.toggle('hidden');
+}
+
+export async function handleFinalizeAnnualArchive(yearToArchive = 2026) {
+    const inputYear = prompt("Masukkan Tahun Siklus yang akan DIFINALISASI & DIARSIPKAN:", String(yearToArchive));
+    if (!inputYear) return;
+
+    const yearNum = parseInt(inputYear, 10);
+    if (isNaN(yearNum) || yearNum < 2020 || yearNum > 2100) {
+        return alert("Tahun tidak valid!");
+    }
+
+    const confirmMsg = `PERINGATAN FINALISASI TAHUN ${yearNum}:\n\n` +
+        `1. Seluruh skor & bukti submission (5-Star & KPI) tahun ${yearNum} dari semua Chapter akan disimpan ke Arsip Tahunan.\n` +
+        `2. Lembar kerja aktif akan dikosongkan untuk siklus tahun ${yearNum + 1}.\n` +
+        `3. Akun PIC periode ${yearNum} akan di-reset agar PIC baru tahun ${yearNum + 1} dapat didaftarkan.\n\n` +
+        `Lanjutkan finalisasi & arsip tahun ${yearNum}?`;
+
+    if (!confirm(confirmMsg)) return;
+
+    try {
+        const res = await fetchAPI(`/admin/archive-year/${yearNum}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ reset_pic_accounts: true })
+        });
+
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.detail || "Gagal memfinalisasi arsip tahunan");
+
+        alert(result.message || `Tahun ${yearNum} berhasil diarsipkan!`);
+        await loadAnnualArchives();
+        if (typeof window.loadData === 'function') await window.loadData();
+    } catch (err) {
+        alert("Gagal memfinalisasi tahun: " + err.message);
+    }
+}
+
 window.loadAnnualArchives = loadAnnualArchives;
+window.toggleArchiveDetailPanel = toggleArchiveDetailPanel;
+window.handleFinalizeAnnualArchive = handleFinalizeAnnualArchive;
