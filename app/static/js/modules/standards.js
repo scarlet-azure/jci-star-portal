@@ -253,11 +253,11 @@ export function renderStandardsList(standardsData = [], chapterSubmissions = {})
                         <thead>
                             <tr class="bg-slate-50 border-b text-[11px] font-bold text-slate-400 uppercase">
                                 <th class="py-3 px-3">Standard & Purpose</th>
-                                <th class="py-3 px-3">Star Category</th>
+                                <th class="py-3 px-3">Category</th>
                                 <th class="py-3 px-3">Deadline</th>
-                                <th class="py-3 px-3">Weight Max</th>
-                                <th class="py-3 px-3">Score Earned</th>
-                                <th class="py-3 px-3">Verification Status</th>
+                                <th class="py-3 px-3">Max Score</th>
+                                <th class="py-3 px-3">Earned Score</th>
+                                <th class="py-3 px-3">Status</th>
                                 <th class="py-3 px-3 text-center">Action</th>
                             </tr>
                         </thead>

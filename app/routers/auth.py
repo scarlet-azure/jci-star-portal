@@ -1,6 +1,6 @@
 import secrets
 from datetime import datetime, timedelta
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Form
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
@@ -36,7 +36,16 @@ def register_pic(data: RegisterRequest, db: Session = Depends(get_db)):
     return {"message": "Registrasi berhasil! Akun Anda sedang menunggu persetujuan dari National Evaluator Desk."}
 
 @router.post("/login")
-def login(data: LoginRequest, db: Session = Depends(get_db)):
+def login(
+    username: str = Form(...),
+    password: str = Form(...),
+    website_hp: str = Form(""), # Honeypot field
+    db: Session = Depends(get_db)
+):
+    # Jika field tersembunyi ini terisi, pasti Bot!
+    if website_hp:
+        raise HTTPException(status_code=400, detail="Bot activity detected.")
+        
     user = db.query(User).filter(User.email == data.email).first()
     if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Email atau password yang Anda masukkan salah.")

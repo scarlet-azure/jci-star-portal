@@ -7,6 +7,7 @@ from fastapi.staticfiles import StaticFiles
 from app.core.config import settings
 from app.core.database import engine, Base, SessionLocal
 from app.core.security import hash_password
+from app.core.security_middleware import SecurityProtectionMiddleware
 from app.models.models import User, UserRole
 from app.routers import auth, chapters, standards, submissions, admin, public, leaderboard, kpi
 
@@ -31,6 +32,11 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+)
+
+app.add_middleware(
+    SecurityProtectionMiddleware,
+    max_requests_per_minute=100
 )
 
 # Folder uploads berada di root project (luar folder app)
